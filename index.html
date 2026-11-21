@@ -1,0 +1,1299 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>求職投遞手帳</title>
+<style>
+:root{
+  --paper:#f6f1e7; --card:#fffdf8; --ink:#1f2a24; --muted:#6f756d; --line:#ded5c3;
+  --green:#2f5d4a; --green-soft:#dfeae2; --tomato:#d2553a; --mustard:#e2a83b;
+  --sky:#3d6fa8; --plum:#7a4d78; --gray:#8a8a82;
+  --serif:"Noto Serif TC","Songti TC","PMingLiU","Source Han Serif TC",Georgia,serif;
+  --sans:"Noto Sans TC","PingFang TC","Microsoft JhengHei","Segoe UI",sans-serif;
+  --mono:"Cascadia Mono","SF Mono",Consolas,monospace;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:14px;
+  background-image:radial-gradient(circle at 1px 1px,rgba(47,93,74,.08) 1px,transparent 0);background-size:22px 22px}
+.wrap{max-width:1180px;margin:0 auto;padding:36px 24px 90px}
+header{display:flex;justify-content:space-between;align-items:flex-end;gap:20px;flex-wrap:wrap;border-bottom:2px solid var(--ink);padding-bottom:16px}
+.eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.18em;color:var(--tomato);text-transform:uppercase}
+h1{font-family:var(--serif);font-size:42px;margin:6px 0 0;font-weight:900;letter-spacing:.02em}
+h1 span{color:var(--green)}
+.actions{display:flex;gap:8px;flex-wrap:wrap}
+button,.btn{font-family:var(--sans);font-size:13px;border:1.5px solid var(--ink);background:var(--card);color:var(--ink);
+  padding:9px 14px;border-radius:999px;cursor:pointer;transition:transform .12s,box-shadow .12s;display:inline-flex;align-items:center;gap:6px}
+button:hover,.btn:hover{transform:translate(-1px,-1px);box-shadow:3px 3px 0 var(--ink)}
+.primary{background:var(--green);color:#fff;border-color:var(--green)}
+.plum{background:var(--plum);color:#fff;border-color:var(--plum)}
+.ghost{border-color:var(--line)}
+input[type=file]{display:none}
+
+/* backup reminder */
+.backup{display:none;align-items:center;gap:12px;flex-wrap:wrap;margin-top:18px;padding:12px 16px;border:1.5px dashed var(--mustard);background:#fdf5e2;border-radius:14px;font-size:13px}
+.backup.show{display:flex}
+.backup b{font-family:var(--serif)}
+.backup button{padding:6px 12px;font-size:12.5px}
+.backup .later{border:none;background:none;color:var(--muted);padding:6px}
+.backup .later:hover{box-shadow:none;transform:none;color:var(--ink)}
+
+.stats{display:grid;grid-template-columns:repeat(9,minmax(0,1fr));gap:8px;margin:22px 0}
+.stat{background:var(--card);border:1.5px solid var(--line);border-radius:14px;padding:14px 16px;cursor:pointer}
+.stat.on{border-color:var(--ink);box-shadow:3px 3px 0 var(--ink)}
+.stat .n{font-family:var(--serif);font-size:32px;font-weight:900;line-height:1}
+.stat .l{font-size:12px;color:var(--muted);margin-top:6px;display:flex;align-items:center;gap:6px}
+.dot{width:8px;height:8px;border-radius:50%;display:inline-block;flex:none}
+.bar{display:flex;gap:2px;height:10px;border-radius:99px;overflow:hidden;margin-bottom:20px;background:var(--line)}
+.bar div{transition:width .4s}
+
+.upcoming{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:14px}
+.upcoming .lab{font-family:var(--mono);font-size:11px;letter-spacing:.12em;color:var(--plum)}
+.chip{background:var(--card);border:1.5px solid var(--plum);border-radius:12px;padding:7px 12px;font-size:12.5px;cursor:pointer}
+.chip b{font-family:var(--mono);color:var(--plum);margin-right:6px}
+.chip:hover{box-shadow:3px 3px 0 var(--plum)}
+.chip.attn{border-color:var(--tomato);color:var(--tomato);font-weight:600}
+.chip.attn.on{background:var(--tomato);color:#fff}
+.chip.attn:hover{box-shadow:3px 3px 0 var(--tomato)}
+.chip.ics{border-color:var(--line);color:var(--ink)}
+.chip.ics:hover{box-shadow:3px 3px 0 var(--ink)}
+
+.toolbar{display:flex;gap:10px;align-items:center;margin-bottom:12px;flex-wrap:wrap}
+.views{display:flex;border:1.5px solid var(--ink);border-radius:999px;overflow:hidden;background:var(--card)}
+.views button{border:none;border-radius:0;padding:9px 16px}
+.views button:hover{box-shadow:none;transform:none;background:#f1ebdf}
+.views button.on{background:var(--ink);color:#fff}
+.search{flex:1;min-width:200px;border:1.5px solid var(--line);background:var(--card);border-radius:999px;padding:10px 16px;font-size:14px;font-family:var(--sans)}
+.search:focus{outline:none;border-color:var(--green)}
+select.sort{border:1.5px solid var(--line);background:var(--card);border-radius:999px;padding:9px 12px;font-family:var(--sans)}
+
+/* table */
+.table-wrap{background:var(--card);border:1.5px solid var(--ink);border-radius:16px;overflow:auto}
+table{width:100%;border-collapse:collapse;min-width:1100px}
+th{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-align:left;color:var(--muted);font-weight:500;padding:12px 14px;border-bottom:1.5px solid var(--ink);background:#faf6ec;white-space:nowrap;user-select:none}
+th[data-sort]{cursor:pointer}
+th[data-sort]:hover{color:var(--ink)}
+th[data-sort]::after{content:'↕';margin-left:5px;opacity:.3}
+th.asc::after{content:'↑';opacity:1;color:var(--green)}
+th.desc::after{content:'↓';opacity:1;color:var(--green)}
+th.asc,th.desc{color:var(--ink)}
+td{padding:12px 14px;border-bottom:1px dashed var(--line);vertical-align:middle}
+.nil{color:#cdc5b5}
+.flags{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:4px}
+.flags .flag{margin-left:0}
+tr:last-child td{border-bottom:none}
+tbody tr:hover{background:#fbf7ee}
+.co{font-weight:700;font-size:15px}
+.co a{color:var(--sky);font-weight:400;font-size:12px;margin-left:6px;text-decoration:none}
+.sub{color:var(--muted);font-size:12px;margin-top:2px}
+.date{font-family:var(--mono);font-size:12.5px;white-space:nowrap}
+.days{font-size:11px;color:var(--muted)}
+.warn{color:var(--tomato)!important;font-weight:600}
+.pill{appearance:none;-webkit-appearance:none;border:none;border-radius:999px;padding:5px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:var(--sans);text-align:center;text-align-last:center;min-width:76px}
+.pill option{text-align:left}
+.note{max-width:240px;color:#454c46;font-size:13px;line-height:1.5;white-space:pre-line}
+.next{font-size:12.5px}
+.next b{font-family:var(--mono);font-weight:600;color:var(--plum)}
+.flag{display:inline-block;font-size:10.5px;font-weight:700;padding:1px 7px;border-radius:99px;background:#f6e0da;color:#c04a31;margin-left:4px}
+.flag.today{background:#f8ecd2;color:#a8721a}
+.row-act{white-space:nowrap}
+.row-act button{padding:5px 9px;font-size:12px;border-color:var(--line)}
+.empty{text-align:center;padding:60px 20px;color:var(--muted)}
+.empty .big{font-family:var(--serif);font-size:24px;color:var(--ink);margin-bottom:8px}
+.inb{display:inline-block;font-size:10.5px;font-weight:600;padding:2px 8px;border-radius:99px;margin-left:6px;vertical-align:2px;background:var(--plum);color:#fff}
+th.ck,td.ck{width:36px;padding-right:0}
+input.cb{width:16px;height:16px;accent-color:var(--green);cursor:pointer}
+tbody tr.sel{background:var(--green-soft)}
+tbody tr.sel:hover{background:#d3e3d8}
+.iv-cell{font-size:12.5px;line-height:1.55;white-space:nowrap}
+.iv-cell .rd{font-weight:700}
+.iv-cell .when{font-family:var(--mono);font-size:12px}
+.iv-cell .when.up{color:var(--plum);font-weight:600}
+.res{display:inline-block;font-size:11px;padding:1px 7px;border-radius:99px;margin-left:4px}
+.res-通過{background:var(--green-soft);color:var(--green)}
+.res-未通過{background:#f6e0da;color:#c04a31}
+
+/* three equal-weight columns so the page numbers stay centred whatever the left text says */
+.pager{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;gap:12px;margin-top:14px;font-size:13px;color:var(--muted)}
+.pager>div:last-child{justify-self:end}
+@media (max-width:640px){.pager{grid-template-columns:minmax(0,1fr)}.pager>div{justify-self:center!important;text-align:center}}
+.pager .pages{display:flex;gap:4px;align-items:center}
+.pager .pg{min-width:34px;height:34px;padding:0 10px;justify-content:center;border-color:var(--line);font-family:var(--mono);font-size:12.5px}
+.pager .pg.cur{background:var(--ink);color:#fff;border-color:var(--ink)}
+.pager .pg:disabled{opacity:.35;cursor:default;transform:none;box-shadow:none}
+.pager select{border:1.5px solid var(--line);background:var(--card);border-radius:999px;padding:6px 10px;font-family:var(--sans);margin:0 4px}
+
+/* kanban */
+.kanban{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:8px;align-items:start}
+.col{background:rgba(255,253,248,.6);border:1.5px solid var(--line);border-radius:16px;padding:8px;min-height:200px;min-width:0;display:flex;flex-direction:column;transition:background .15s,border-color .15s}
+.col.over{background:var(--green-soft);border-color:var(--green);border-style:dashed}
+.col-h{display:flex;align-items:center;gap:6px;font-weight:700;font-size:13px;padding:4px 4px 8px;border-bottom:1.5px solid var(--line);margin-bottom:8px;white-space:nowrap}
+.col-h .c{margin-left:auto;font-family:var(--mono);font-size:12px;color:var(--muted);font-weight:500}
+.col-body{display:flex;flex-direction:column;gap:7px;max-height:calc(100vh - 220px);min-height:120px;overflow-y:auto;padding:0 2px 2px;scrollbar-width:thin}
+.col-more{margin-top:8px;justify-content:center;font-size:12px;padding:6px 10px;border-color:var(--line);color:var(--muted)}
+.drops{grid-column:1/-1;display:flex;align-items:center;gap:8px;margin-top:4px;padding-top:12px;border-top:1.5px dashed var(--line)}
+.drops-h{font-size:11px;font-family:var(--mono);letter-spacing:.1em;color:var(--muted);margin-right:4px;white-space:nowrap}
+.drop{flex:1;display:flex;align-items:center;justify-content:center;gap:7px;padding:11px 10px;border:1.5px dashed var(--line);border-radius:12px;background:rgba(255,253,248,.6);font-size:13px;font-weight:600;cursor:pointer;transition:background .15s,border-color .15s,transform .15s}
+.drop .c{font-family:var(--mono);color:var(--muted);font-size:12px;font-weight:500}
+.drop:hover{border-color:var(--ink)}
+.drop.over{background:var(--green-soft);border-color:var(--green);transform:scale(1.02)}
+.col-body.empty{align-items:center;justify-content:center;min-height:90px}
+.col-body.empty::after{content:'拖到這裡';font-size:12px;color:#cdc5b5}
+.col{min-height:0!important}
+.card{background:var(--card);border:1.5px solid var(--line);border-left:4px solid var(--sky);border-radius:10px;padding:8px 9px;cursor:grab;font-size:12px;line-height:1.45;min-width:0}
+.card:hover{border-color:var(--ink);box-shadow:2px 2px 0 var(--ink)}
+.card.dragging{opacity:.4}
+.card .t{font-weight:700;font-size:13.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.card .p{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#3b443e}
+.card .m{color:var(--muted);font-size:11px;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.card.slim{padding:6px 9px}
+.card.slim .m{display:none}
+.kb-hint{font-size:12px;color:var(--muted);margin:0 0 10px}
+
+/* analytics */
+.an-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.panel{background:var(--card);border:1.5px solid var(--ink);border-radius:16px;padding:18px 20px;min-width:0}
+.panel h3{font-family:var(--serif);font-size:18px;margin:0 0 4px}
+.panel .desc{font-size:12px;color:var(--muted);margin:0 0 14px}
+.panel.full{grid-column:1/-1}
+.funnel{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.fstep{border:1.5px solid var(--line);border-radius:12px;padding:12px 14px}
+.fstep .n{font-family:var(--serif);font-size:30px;font-weight:900;line-height:1}
+.fstep .l{font-size:12px;color:var(--muted);margin-top:4px}
+.fstep .r{font-family:var(--mono);font-size:12px;margin-top:8px;color:var(--ink)}
+.hbar{display:grid;grid-template-columns:110px minmax(0,1fr) 120px;gap:10px;align-items:center;margin-bottom:8px;font-size:12.5px;position:relative}
+.hbar .nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hbar .track{height:14px;position:relative}
+.hbar .fill{position:absolute;left:0;top:0;bottom:0;border-radius:0 4px 4px 0;background:var(--green)}
+.hbar .fill.ghost{background:#c9d9ce}
+.hbar .v{font-family:var(--mono);font-size:12px;color:var(--muted);text-align:right}
+.hbar:hover .nm{font-weight:700}
+.legend{display:flex;gap:14px;font-size:12px;color:var(--muted);margin-bottom:12px}
+.legend span{display:flex;align-items:center;gap:6px}
+.legend i{width:12px;height:8px;border-radius:2px;display:inline-block}
+.weeks{display:flex;align-items:flex-end;gap:2px;height:160px;border-bottom:1px solid var(--line);position:relative}
+.wk{flex:1;display:flex;flex-direction:column;justify-content:flex-end;height:100%;position:relative;cursor:default}
+.wk .b{background:var(--green);border-radius:4px 4px 0 0;min-height:0}
+.wk:hover .b{background:#24493a}
+.wk .lbl{position:absolute;bottom:-20px;left:50%;transform:translateX(-50%);font-family:var(--mono);font-size:10px;color:var(--muted);white-space:nowrap}
+.tip{position:fixed;pointer-events:none;background:var(--ink);color:#fff;font-size:12px;padding:7px 10px;border-radius:8px;z-index:50;opacity:0;transition:opacity .1s;white-space:nowrap}
+.tip.show{opacity:1}
+.an-table{width:100%;min-width:0;font-size:12.5px;margin-top:6px}
+.an-table td,.an-table th{padding:7px 8px}
+
+/* dialogs */
+dialog{border:2px solid var(--ink);border-radius:18px;padding:0;width:min(800px,95vw);max-height:92vh;background:var(--card);box-shadow:8px 8px 0 var(--ink)}
+dialog.small{width:min(440px,92vw)}
+dialog[open]{display:flex}
+dialog::backdrop{background:rgba(31,42,36,.35)}
+dialog form{display:flex;flex-direction:column;width:100%;max-height:calc(92vh - 4px)}
+.dlg-body{overflow:auto;flex:1}
+.dlg-h{padding:18px 22px;border-bottom:1.5px dashed var(--line);font-family:var(--serif);font-size:22px;font-weight:900}
+.dlg-h.inbound{color:var(--plum)}
+form .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px 14px;padding:18px 22px}
+label{font-size:12px;color:var(--muted);display:flex;flex-direction:column;gap:5px}
+label.full{grid-column:1/-1}
+label input,label select,label textarea{font-family:var(--sans);font-size:14px;color:var(--ink);border:1.5px solid var(--line);border-radius:10px;padding:9px 11px;background:#fff}
+label input:focus,label select:focus,label textarea:focus{outline:none;border-color:var(--green)}
+textarea{resize:vertical;min-height:70px}
+.dlg-f{display:flex;justify-content:space-between;gap:8px;padding:14px 22px;border-top:1.5px dashed var(--line)}
+.seg{display:flex;border:1.5px solid var(--line);border-radius:10px;overflow:hidden;background:#fff}
+.seg label{flex:1;flex-direction:row;justify-content:center;align-items:center;padding:9px 6px;font-size:13.5px;color:var(--ink);cursor:pointer;gap:6px}
+.seg input{display:none}
+.seg label:first-child:has(input:checked){background:var(--green);color:#fff}
+.seg label:last-child:has(input:checked){background:var(--plum);color:#fff}
+.iv-sec{margin:0 22px 18px;border:1.5px solid var(--line);border-radius:14px;padding:14px;background:#fbf8f1}
+.iv-h{display:flex;justify-content:space-between;align-items:center;font-family:var(--serif);font-weight:900;font-size:16px;margin-bottom:10px}
+.iv-h button{padding:6px 12px;font-size:12px}
+.iv-row{display:grid;grid-template-columns:88px minmax(0,1.1fr) 92px 78px 90px minmax(0,1.5fr) 28px 28px;gap:6px;margin-bottom:6px;align-items:center}
+.iv-row input,.iv-row select{font-family:var(--sans);font-size:13px;border:1.5px solid var(--line);border-radius:8px;padding:7px 8px;background:#fff;min-width:0;width:100%}
+.iv-row .ic{border:none;background:none;font-size:15px;padding:0;cursor:pointer;justify-content:center}
+.iv-row .ic:hover{box-shadow:none;transform:scale(1.15)}
+.iv-row .rm{color:var(--tomato)}
+.iv-empty{font-size:12.5px;color:var(--muted);padding:4px 2px}
+.bd-body{padding:18px 22px;display:flex;flex-direction:column;gap:12px}
+
+/* suggestion banner */
+.backup.sugg{border-color:var(--sky);background:#e9f0f8}
+/* analytics ignores filters, so hide the controls that would look like they apply */
+body.v-stats #stats,body.v-stats #bar,body.v-stats #upcoming,body.v-stats #q,body.v-stats #originF{display:none}
+/* with the cards gone, keep the same gap under the header */
+body.v-stats .toolbar{margin-top:22px;margin-bottom:16px}
+.chip.offer{border-color:var(--green);color:var(--green);font-weight:600}
+.chip.offer:hover{box-shadow:3px 3px 0 var(--green)}
+.chip.ghost{border-color:var(--sky);color:var(--sky);font-weight:600;background:#e9f0f8}
+/* offer comparison */
+.cmp-wrap{overflow:auto;padding:16px 22px}
+.cmp{width:100%;min-width:0;border-collapse:separate;border-spacing:0}
+.cmp th,.cmp td{padding:10px 12px;border-bottom:1px dashed var(--line);vertical-align:top;font-size:13px;line-height:1.55;white-space:pre-line}
+.cmp thead th{font-family:var(--serif);font-size:17px;color:var(--ink);letter-spacing:0;background:var(--green-soft);border-bottom:1.5px solid var(--ink);min-width:170px}
+.cmp tbody th{font-family:var(--sans);font-size:12px;color:var(--muted);background:transparent;width:90px;border-bottom:1px dashed var(--line)}
+.cmp .money{font-family:var(--serif);font-size:18px;font-weight:900;color:var(--green)}
+
+/* bulk bar */
+.bulk{position:fixed;left:50%;bottom:60px;transform:translateX(-50%) translateY(30px);background:var(--ink);color:#fff;
+  border-radius:999px;padding:8px 10px 8px 20px;display:flex;align-items:center;gap:8px;box-shadow:5px 5px 0 var(--green);
+  opacity:0;visibility:hidden;pointer-events:none;
+  transition:transform .25s cubic-bezier(.3,1.4,.5,1),opacity .2s,visibility 0s .25s;z-index:20;flex-wrap:wrap;max-width:94vw}
+.bulk.show{transform:translateX(-50%) translateY(0);opacity:1;visibility:visible;pointer-events:auto;
+  transition:transform .25s cubic-bezier(.3,1.4,.5,1),opacity .2s,visibility 0s}
+.bulk .cnt{font-family:var(--serif);font-weight:900;font-size:16px;margin-right:6px;white-space:nowrap}
+.bulk select,.bulk button{background:transparent;color:#fff;border:1.5px solid rgba(255,255,255,.35);border-radius:999px;padding:7px 12px;font-size:12.5px;font-family:var(--sans);cursor:pointer}
+.bulk select option{color:var(--ink)}
+.bulk button:hover{box-shadow:none;border-color:#fff;transform:none}
+.bulk .danger{border-color:var(--tomato);color:#ffb5a5}
+.bulk .x{border:none;font-size:16px;padding:4px 10px}
+
+.toast{position:fixed;left:50%;top:24px;transform:translateX(-50%) translateY(-20px);z-index:60;background:var(--ink);color:#fff;padding:8px 8px 8px 18px;border-radius:999px;font-size:13px;opacity:0;transition:.25s;pointer-events:none;display:flex;align-items:center;gap:12px;min-height:38px}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);pointer-events:auto}
+.toast:not(.has-act){padding-right:18px}
+.toast button{background:var(--mustard);border:none;color:var(--ink);font-weight:700;padding:5px 12px;font-size:12.5px}
+.toast button:hover{box-shadow:none;transform:none;background:#f0bd5a}
+.errbar{position:fixed;left:50%;top:16px;transform:translateX(-50%);z-index:80;display:flex;align-items:center;gap:12px;flex-wrap:wrap;max-width:min(760px,94vw);
+  background:#fdecea;border:2px solid var(--tomato);color:#8f2a17;border-radius:14px;padding:10px 12px 10px 16px;box-shadow:4px 4px 0 var(--tomato);font-size:13px}
+.errbar span{font-family:var(--mono);font-size:12px;color:var(--ink);word-break:break-all}
+.errbar small{color:var(--muted)}
+.errbar button{border:none;background:none;color:#8f2a17;font-size:15px;padding:2px 6px;margin-left:auto}
+.errbar button:hover{box-shadow:none;transform:none}
+.hint{font-size:12px;color:var(--muted);margin-top:14px;line-height:1.7}
+.hint code{font-family:var(--mono);background:#efe8d8;padding:1px 6px;border-radius:4px}
+[hidden]{display:none!important}
+
+@media (max-width:820px){.stats{grid-template-columns:repeat(3,minmax(0,1fr))}h1{font-size:32px}.an-grid{grid-template-columns:minmax(0,1fr)}.funnel{grid-template-columns:repeat(2,minmax(0,1fr))}.kanban{grid-template-columns:repeat(3,minmax(0,1fr))!important}}
+@media (max-width:640px){.iv-row{grid-template-columns:1fr 1fr}}
+@media print{
+  .actions,.toolbar,.row-act,.hint,.bar,.bulk,.ck,.pager,.backup,.upcoming,.toast{display:none!important}
+  .wrap{padding:0}
+  .table-wrap{overflow:visible;border-radius:0}
+  table{min-width:0;font-size:11px}
+  .kanban{grid-template-columns:repeat(7,minmax(0,1fr))}
+  .col-body{max-height:none;overflow:visible}
+  .col-more{display:none!important}
+  .panel{break-inside:avoid}
+  @page{size:A4 landscape;margin:12mm}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <div class="eyebrow">Job Application Log</div>
+      <h1>求職<span>投遞</span>手帳</h1>
+    </div>
+    <div class="actions">
+      <button class="primary" id="addBtn">＋ 新增投遞</button>
+      <button class="plum" id="addInBtn">＋ 公司邀約</button>
+      <button class="ghost" id="exportBtn">⇩ 備份到 Excel</button>
+      <label class="btn ghost" style="flex-direction:row;color:var(--ink);font-size:13px">⇪ 從備份還原<input type="file" id="fileIn" accept=".xlsx,.csv"></label>
+    </div>
+  </header>
+
+  <div class="backup" id="backup">
+    <span>💾 <b id="backupMsg"></b> 資料只存在這個瀏覽器，建議定期匯出備份。</span>
+    <button class="primary" id="backupNow">立即備份到 Excel</button>
+    <button class="later" id="backupLater">明天再提醒</button>
+  </div>
+  <div class="backup sugg" id="sugg">
+    <span>📭 <span id="suggMsg"></span></span>
+    <button class="primary" id="suggApply"></button>
+    <button class="ghost" id="suggView">先看是哪些</button>
+    <button class="later" id="suggLater">過幾天再提醒</button>
+  </div>
+
+  <div class="stats" id="stats"></div>
+  <div class="bar" id="bar"></div>
+  <div class="upcoming" id="upcoming"></div>
+
+  <div class="toolbar">
+    <div class="views" id="views">
+      <button data-v="table" class="on">☰ 表格</button>
+      <button data-v="kanban">▦ 看板</button>
+      <button data-v="stats">◔ 分析</button>
+    </div>
+    <input class="search" id="q" placeholder="搜尋公司、職位、備註、面試…">
+    <select class="sort" id="originF">
+      <option value="">全部來源</option>
+      <option>主動投遞</option>
+      <option>公司邀約</option>
+    </select>
+  </div>
+
+  <section id="vTable">
+    <div class="table-wrap">
+      <table>
+        <colgroup><col style="width:36px"><col><col style="width:118px"><col style="width:104px"><col style="width:104px"><col style="width:190px"><col style="width:112px"><col style="width:170px"><col><col style="width:68px"></colgroup>
+        <thead><tr>
+          <th class="ck"><input type="checkbox" class="cb" id="ckAll" title="全選這一頁"></th>
+          <th data-sort="company">公司 / 職位</th><th data-sort="date">日期</th><th data-sort="channel">管道</th>
+          <th data-sort="status">狀態</th><th data-sort="interview">面試進度</th><th>地點 / 薪資</th>
+          <th data-sort="nextDate">下一步</th><th>備註</th><th></th>
+        </tr></thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+    <div class="pager" id="pager"></div>
+  </section>
+
+  <section id="vKanban" hidden>
+    <p class="kb-hint">拖曳卡片就能改狀態，點卡片可以編輯。<span id="kbHidden"></span></p>
+    <div class="kanban" id="kanban"></div>
+  </section>
+
+  <section id="vStats" hidden>
+    <div class="an-grid" id="analytics"></div>
+  </section>
+
+  <p class="hint">
+    資料只存在這個瀏覽器裡，記得定期按「備份到 Excel」。需要時可以用「從備份還原」，把網頁上的紀錄整份換回備份檔的內容。
+  </p>
+</div>
+
+<dialog id="dlg">
+  <form method="dialog" id="form">
+    <div class="dlg-h" id="dlgTitle">新增投遞</div>
+    <div class="dlg-body">
+    <div class="grid">
+      <label class="full">來源
+        <div class="seg">
+          <label><input type="radio" name="origin" value="主動投遞">✉ 我主動投遞</label>
+          <label><input type="radio" name="origin" value="公司邀約">☎ 公司／獵頭找我</label>
+        </div>
+      </label>
+      <label>公司 *<input name="company" required></label>
+      <label>職位 *<input name="position" required></label>
+      <label><span id="dateLab">投遞日期</span><input type="date" name="date"></label>
+      <label><span id="chLab">投遞管道</span><input name="channel" list="channels" placeholder="104、LinkedIn、內推…"></label>
+      <label>狀態<select name="status" id="statusSel"></select></label>
+      <label>地點<input name="location"></label>
+      <label>薪資<input name="salary" placeholder="例：50–60K"></label>
+      <label><span id="ctLab">聯絡人</span><input name="contact"></label>
+      <label>下一步（面試以外的待辦）<input name="next" placeholder="例：寄作品集、回覆 HR、談薪"></label>
+      <label>下一步日期<input type="date" name="nextDate"></label>
+      <label class="full">職缺連結<input name="link" placeholder="https://"></label>
+      <label class="full">備註<textarea name="note"></textarea></label>
+    </div>
+    <div class="iv-sec">
+      <div class="iv-h">面試紀錄 <span class="sub" style="font-family:var(--sans);font-weight:400;font-size:12px;margin-right:auto;margin-left:10px">排好的面試記在這裡就好，不用再寫到下一步</span><button type="button" id="ivAdd">＋ 新增一輪</button></div>
+      <div id="ivList"></div>
+    </div>
+    </div>
+    <div class="dlg-f">
+      <button type="button" class="ghost" id="delBtn" style="color:var(--tomato)">刪除</button>
+      <div style="display:flex;gap:8px">
+        <button type="button" class="ghost" id="cancelBtn">取消</button>
+        <button type="submit" class="primary">儲存</button>
+      </div>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="bdlg" class="small">
+  <form method="dialog" id="bform">
+    <div class="dlg-h" id="bTitle"></div>
+    <div class="bd-body" id="bBody"></div>
+    <div class="dlg-f">
+      <span></span>
+      <div style="display:flex;gap:8px">
+        <button type="button" class="ghost" id="bCancel">取消</button>
+        <button type="submit" class="primary">套用</button>
+      </div>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="cdlg">
+  <form method="dialog">
+    <div class="dlg-h">錄取比較</div>
+    <div class="dlg-body cmp-wrap" id="cmpBody"></div>
+    <div class="dlg-f"><span class="sub">點公司名稱可以編輯那筆紀錄。</span><button type="submit" class="primary">關閉</button></div>
+  </form>
+</dialog>
+
+<datalist id="channels"><option>104人力銀行</option><option>1111人力銀行</option><option>LinkedIn</option><option>Cake</option><option>Yourator</option><option>公司官網</option><option>內推</option><option>LinkedIn 私訊</option><option>獵頭</option><option>104 主動邀約</option><option>Email</option><option>電話</option></datalist>
+
+<div class="bulk" id="bulk">
+  <span class="cnt" id="bulkCnt">已選 0 筆</span>
+  <select id="bulkStatus"><option value="">改狀態…</option></select>
+  <button id="bulkChannel">改管道</button>
+  <button id="bulkNext">設下一步</button>
+  <button id="bulkNote">加備註</button>
+  <button id="bulkExport">匯出選取</button>
+  <button class="danger" id="bulkDel">刪除</button>
+  <button class="x" id="bulkClear" title="取消選取">✕</button>
+</div>
+<div class="toast" id="toast"><span id="toastMsg"></span><button id="toastAct" hidden></button></div>
+<div class="errbar" id="errBar" hidden><b>⚠ 網頁出了點問題</b><span id="errMsg"></span><small>請截圖這段訊息傳給我</small><button type="button" onclick="this.parentNode.hidden=true">✕</button></div>
+<script>
+// registered first so it also catches problems in the scripts below
+function showErr(m){const b=document.getElementById('errBar');if(!b)return;document.getElementById('errMsg').textContent=m;b.hidden=false}
+window.addEventListener('error',e=>showErr(`${e.message||'未知錯誤'}${e.lineno?`（第 ${e.lineno} 行）`:''}`));
+window.addEventListener('unhandledrejection',e=>showErr(String(e.reason&&e.reason.message||e.reason)));
+</script>
+<div class="tip" id="tip"></div>
+
+<script>
+/* ---------- Constants ---------- */
+const STATUSES=[
+  {k:'邀約洽談',c:'#7a4d78',bg:'#efe3f0'},
+  {k:'已投遞',c:'#3d6fa8',bg:'#e1eaf5'},
+  {k:'面試中',c:'#a8721a',bg:'#f8ecd2'},
+  {k:'等待結果',c:'#2a7f86',bg:'#dcefef'},
+  {k:'錄取',c:'#2f5d4a',bg:'#dfeae2'},
+  {k:'未錄取',c:'#c04a31',bg:'#f6e0da'},
+  {k:'無回應',c:'#6f756d',bg:'#ebe8e0'}
+];
+const CLOSED=['錄取','未錄取','無回應'];
+const FIELDS=['company','position','origin','date','channel','status','location','salary','contact','next','nextDate','link','note'];
+const LABELS={company:'公司',position:'職位',origin:'來源類型',date:'日期',channel:'管道',status:'狀態',location:'地點',salary:'薪資',contact:'聯絡人',next:'下一步',nextDate:'下一步日期',link:'連結',note:'備註'};
+const ALIASES={
+  company:['公司','公司名稱','企業','company','company name'],
+  position:['職位','職缺','職稱','應徵職位','position','title','job','role','job title'],
+  origin:['來源類型','類型','投遞類型','主被動','主動/被動','origin','type'],
+  date:['投遞日期','日期','聯繫日期','邀約日期','應徵日期','申請日期','投遞時間','date','applied','applied date','apply date'],
+  channel:['管道','來源','平台','渠道','channel','source','platform'],
+  status:['狀態','進度','結果','status','stage'],
+  location:['地點','地區','工作地點','location','city'],
+  salary:['薪資','薪水','待遇','salary','pay'],
+  contact:['聯絡人','聯絡窗口','hr','contact','recruiter'],
+  next:['下一步','待辦','next','next step','todo'],
+  nextDate:['下一步日期','next date'],
+  link:['連結','網址','職缺連結','link','url'],
+  note:['備註','筆記','心得','note','notes','memo','remark']
+};
+const ROUNDS=['筆試/測驗','一面','二面','三面','四面','主管面','HR面','終面'];
+const MODES=['線上','現場','電話'];
+const RESULTS=['待面試','等結果','通過','未通過'];
+const WD='日一二三四五六';
+const KEY='job-tracker-v1';
+
+/* ---------- State ---------- */
+let data=JSON.parse(localStorage.getItem(KEY)||'[]');
+// older versions stored unknown interview times as midnight; treat those as date-only
+data.forEach(d=>(d.interviews||[]).forEach(iv=>{if(/T00:00$/.test(iv.when||''))iv.when=iv.when.slice(0,10)}));
+let filter=null, attnOnly=false, editingId=null, visibleIds=[], view='table';
+let page=1, pageSize=+localStorage.getItem(KEY+'-pagesize')||20;
+let sortKey='date', sortDir=-1;
+let ghostOnly=false, hiddenClosed=0;
+const selected=new Set();
+
+/* ---------- Helpers ---------- */
+const $=s=>document.querySelector(s);
+const save=()=>localStorage.setItem(KEY,JSON.stringify(data));
+const uid=()=>Math.random().toString(36).slice(2,10);
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const st=k=>STATUSES.find(s=>s.k===k)||STATUSES[1];
+const org=d=>d.origin==='公司邀約'?'公司邀約':'主動投遞';
+const pad=n=>String(n).padStart(2,'0');
+// all dates use the browser's local time zone, not UTC
+const ymd=d=>`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+const todayStr=()=>ymd(new Date());
+function parseDay(s){const m=String(s||'').match(/^(\d{4})-(\d{2})-(\d{2})/);return m?new Date(+m[1],m[2]-1,+m[3]):null}
+function daysSince(s){const t=parseDay(s);if(!t)return null;const now=new Date();now.setHours(0,0,0,0);return Math.round((now-t)/864e5)}
+// interview times are "YYYY-MM-DDTHH:MM", or just "YYYY-MM-DD" when the time is unknown
+const hasTime=s=>/T\d/.test(s||'');
+const ivStart=s=>hasTime(s)?new Date(s):parseDay(s);
+const fmtDT=s=>s?(hasTime(s)?s.replace('T',' '):s+'（時間未定）'):'';
+function isFuture(s){
+  const t=s&&ivStart(s);if(!t||isNaN(t))return false;
+  if(!hasTime(s))t.setDate(t.getDate()+1);// date-only counts as upcoming until the day ends
+  return t>new Date();
+}
+
+/* ---------- Toast + undo ---------- */
+let undoSnap=null;
+function toast(msg,opt={}){
+  const t=$('#toast'), b=$('#toastAct');
+  $('#toastMsg').textContent=msg;
+  b.hidden=!opt.undo;t.classList.toggle('has-act',!!opt.undo);
+  b.textContent='復原';
+  b.onclick=()=>{if(!undoSnap)return;data=JSON.parse(undoSnap);undoSnap=null;save();render();toast('已復原')};
+  t.classList.add('show');clearTimeout(t._t);
+  t._t=setTimeout(()=>{t.classList.remove('show');if(opt.undo)undoSnap=null},opt.undo?10000:2200);
+}
+function snapshot(){undoSnap=JSON.stringify(data)}
+
+/* ---------- Interviews ---------- */
+function ivText(iv){return [iv.round,(iv.when||'').replace('T',' '),iv.mode,iv.result].filter(Boolean).join(' ')+(iv.note?`（${iv.note}）`:'')}
+function parseIvText(t){
+  return String(t||'').split(/[；;\n]/).map(s=>s.trim()).filter(Boolean).map(s=>{
+    const m=s.match(/^(\S+)\s*(\d{4}-\d{2}-\d{2})?\s*(\d{1,2}:\d{2})?\s*(線上|現場|電話)?\s*(待面試|等結果|通過|未通過)?\s*(?:[（(](.*)[）)])?$/);
+    if(!m)return {round:s,when:'',mode:'',result:'待面試',note:''};
+    return {round:m[1],when:m[2]?(m[3]?m[2]+'T'+m[3].padStart(5,'0'):m[2]):'',mode:m[4]||'',result:m[5]||'待面試',note:m[6]||''};
+  });
+}
+function nextInterview(d){return (d.interviews||[]).filter(x=>isFuture(x.when)).sort((a,b)=>a.when.localeCompare(b.when))[0]}
+function currentInterview(d){const l=d.interviews||[];return nextInterview(d)||l[l.length-1]}
+
+/* ---------- Status <-> interview link ---------- */
+const PENDING=['待面試','等結果'];
+const roundIdx=r=>{const i=ROUNDS.indexOf(r);return i<0?99:i};
+// dated rounds in time order; undated ones fall back to the usual round order
+function sortInterviews(l){return l.sort((a,b)=>a.when&&b.when?a.when.localeCompare(b.when):roundIdx(a.round)-roundIdx(b.round))}
+const lastRound=d=>{const l=d.interviews||[];return l[l.length-1]};
+function lastDone(d){return (d.interviews||[]).filter(x=>x.when&&!isFuture(x.when)).sort((a,b)=>a.when.localeCompare(b.when)).pop()}
+const daysSinceIv=iv=>daysSince(iv.when.slice(0,10));
+/*
+  Status rules — one source of truth:
+  1. A status the user picks (drag, dropdown, bulk, dialog) is final. Only the latest
+     interview round is nudged so the two read consistently; the status itself is never changed.
+  2. The status is derived from interviews ONLY while the user edits interviews in the dialog.
+  3. Loading the page or restoring a backup never changes a status.
+*/
+function applyStatusToInterviews(d,S){
+  const r=lastRound(d);if(!r)return;
+  if(S==='未錄取'){if(PENDING.includes(r.result))r.result='未通過';return}
+  if(S==='錄取'){r.result='通過';return}
+  if(S==='等待結果'){if(r.result!=='通過')r.result='等結果';return}
+  if(S==='面試中'){if(r.result==='未通過')r.result='待面試';return}
+  // 已投遞 / 邀約洽談 / 無回應: keep the interview history exactly as it is
+}
+const OPEN=['已投遞','邀約洽談','面試中','等待結果'];
+function deriveStatus(d){
+  const l=d.interviews||[];if(!l.length)return;
+  const r=lastRound(d), S=st(d.status).k;
+  if(S==='錄取')return;
+  if(r.result==='未通過'){d.status='未錄取';return}
+  if(S==='未錄取'&&!PENDING.includes(r.result))return;
+  d.status=r.result==='等結果'&&!nextInterview(d)?'等待結果':'面試中';
+}
+function normalizeRecord(d){
+  if((d.interviews||[]).length)sortInterviews(d.interviews);
+  return d;
+}
+const syncStatus=deriveStatus;// old name, kept so nothing breaks
+
+/* ---------- Attention rules ---------- */
+function attention(d){
+  const S=st(d.status).k, out=[];
+  if(CLOSED.includes(S))return out;
+  const t=todayStr();
+  if(d.nextDate&&d.nextDate<t)out.push({k:'over',t:'下一步已過期'});
+  else if(d.nextDate===t)out.push({k:'today',t:'今天要處理'});
+  const ds=daysSince(d.date);
+  if(S==='已投遞'&&ds!==null&&ds>=14&&!(d.nextDate&&d.nextDate>=t))out.push({k:'over',t:'可追蹤'});
+  if(S==='邀約洽談'&&ds!==null&&ds>=5)out.push({k:'over',t:'邀約待回覆'});
+  if((d.interviews||[]).some(x=>x.result==='待面試'&&x.when&&!isFuture(x.when)))out.push({k:'today',t:'面試結果待更新'});
+  const ld=lastDone(d);
+  if(ld&&ld.result==='等結果'&&!nextInterview(d)){const n=daysSinceIv(ld);if(n>=7)out.push({k:'over',t:`已等 ${n} 天・可追蹤`})}
+  return out;
+}
+// applied 30+ days ago, no interviews and nothing scheduled: probably a silent rejection
+function ghost(d){
+  const ds=daysSince(d.date);
+  return st(d.status).k==='已投遞'&&ds!==null&&ds>=30&&!(d.interviews||[]).length&&!(d.nextDate&&d.nextDate>=todayStr());
+}
+// interviewed, then 14+ days without a result or anything scheduled
+function ivGhost(d){
+  if(!['面試中','等待結果'].includes(st(d.status).k)||nextInterview(d)||(d.nextDate&&d.nextDate>=todayStr()))return false;
+  const ld=lastDone(d);
+  return !!ld&&PENDING.includes(ld.result)&&daysSinceIv(ld)>=14;
+}
+
+/* ---------- Normalizers ---------- */
+function serialToDate(v){return new Date(Math.round((+v-25569)*864e5))}
+function normDate(v){
+  if(v==null||v==='')return '';
+  if(typeof v==='number'||/^\d{5}(\.\d+)?$/.test(v)){const d=serialToDate(v);return `${d.getUTCFullYear()}-${pad(d.getUTCMonth()+1)}-${pad(d.getUTCDate())}`}
+  const s=String(v).trim().replace(/[年月.]/g,'/').replace(/日/,'');
+  const m=s.match(/^(\d{2,4})[\/-](\d{1,2})[\/-](\d{1,2})/);
+  if(m){let y=+m[1];if(y<1911)y+=1911;return `${y}-${pad(m[2])}-${pad(m[3])}`}
+  const d=new Date(s);return isNaN(d)?String(v):ymd(d);
+}
+function normDT(v){
+  if(v==null||v==='')return '';
+  if(typeof v==='number'||/^\d{5}(\.\d+)?$/.test(v)){
+    const d=serialToDate(v), day=`${d.getUTCFullYear()}-${pad(d.getUTCMonth()+1)}-${pad(d.getUTCDate())}`;
+    return +v%1===0?day:`${day}T${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}`;
+  }
+  const s=String(v).trim(), day=normDate(s.split(/\s+/)[0]);
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(day))return '';
+  const t=s.match(/(\d{1,2})[:：](\d{2})/);
+  if(!t)return day;// no time given: keep it date-only
+  let h=+t[1];if(/下午|pm/i.test(s)&&h<12)h+=12;
+  return `${day}T${pad(h)}:${t[2]}`;
+}
+function normStatus(v){
+  v=String(v||'').trim();if(!v)return '已投遞';
+  if(/錄取|offer|通過|accept/i.test(v)&&!/未|不|沒|reject/i.test(v))return '錄取';
+  if(/未錄取|不錄取|拒|感謝函|reject|fail|沒上/i.test(v))return '未錄取';
+  if(/等(待)?(結果|通知|回覆|回應|消息)|waiting|pending/i.test(v))return '等待結果';
+  if(/面試|interview|測驗|筆試|一面|二面|三面/i.test(v))return '面試中';
+  if(/無回應|沒回|no reply|ghost|石沉/i.test(v))return '無回應';
+  if(/邀約|洽談|獵頭|聯繫|recruit/i.test(v))return '邀約洽談';
+  return '已投遞';
+}
+function normOrigin(v){return /邀約|獵頭|找我|主動聯[繫絡]|被動|私訊|recruit|headhunt|inbound|invite/i.test(String(v||''))?'公司邀約':'主動投遞'}
+
+/* ---------- Duplicate detection ---------- */
+const normKey=s=>String(s||'').toLowerCase().replace(/\s+/g,'').replace(/[,.]*(股份有限公司|有限公司|inc|ltd|co|corp)[,.]*$/,'');
+const dupKey=d=>`${normKey(d.company)}|${normKey(d.position)}|${d.date||''}`;
+function mergeInto(target,src){
+  FIELDS.forEach(f=>{if(src[f])target[f]=src[f]});
+  const list=target.interviews||(target.interviews=[]);
+  (src.interviews||[]).forEach(iv=>{
+    const same=list.find(x=>x.round===iv.round);
+    if(same)Object.keys(iv).forEach(k=>{if(iv[k])same[k]=iv[k]});else list.push(iv);
+  });
+}
+function fillDefaults(o){
+  if(!o.origin)o.origin='主動投遞';
+  if(!o.status){
+    o.status=o.origin==='公司邀約'?'邀約洽談':'已投遞';
+    if((o.interviews||[]).length){sortInterviews(o.interviews);deriveStatus(o)}
+  }
+  return o;
+}
+</script>
+<script>
+/* ---------- Download helper ---------- */
+function downloadBlob(name,blob){
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href),4000);
+}
+
+/* ---------- XLSX writer (stored zip, inline strings) ---------- */
+const CRC_T=(()=>{const t=new Uint32Array(256);for(let n=0;n<256;n++){let c=n;for(let k=0;k<8;k++)c=c&1?0xEDB88320^(c>>>1):c>>>1;t[n]=c>>>0}return t})();
+function crc32(u8){let c=0xFFFFFFFF;for(let i=0;i<u8.length;i++)c=CRC_T[(c^u8[i])&255]^(c>>>8);return (c^0xFFFFFFFF)>>>0}
+function zipStore(files){
+  const enc=new TextEncoder(), parts=[], central=[];let offset=0;
+  files.forEach(({name,content})=>{
+    const nb=enc.encode(name), db=enc.encode(content), crc=crc32(db);
+    const lh=new DataView(new ArrayBuffer(30));
+    lh.setUint32(0,0x04034b50,true);lh.setUint16(4,20,true);lh.setUint16(6,0x0800,true);lh.setUint16(8,0,true);
+    lh.setUint16(10,0,true);lh.setUint16(12,0x21,true);lh.setUint32(14,crc,true);lh.setUint32(18,db.length,true);
+    lh.setUint32(22,db.length,true);lh.setUint16(26,nb.length,true);lh.setUint16(28,0,true);
+    parts.push(new Uint8Array(lh.buffer),nb,db);
+    const ch=new DataView(new ArrayBuffer(46));
+    ch.setUint32(0,0x02014b50,true);ch.setUint16(4,20,true);ch.setUint16(6,20,true);ch.setUint16(8,0x0800,true);
+    ch.setUint16(10,0,true);ch.setUint16(12,0,true);ch.setUint16(14,0x21,true);ch.setUint32(16,crc,true);
+    ch.setUint32(20,db.length,true);ch.setUint32(24,db.length,true);ch.setUint16(28,nb.length,true);
+    ch.setUint32(42,offset,true);
+    central.push(new Uint8Array(ch.buffer),nb);
+    offset+=30+nb.length+db.length;
+  });
+  const cdSize=central.reduce((s,p)=>s+p.length,0);
+  const eo=new DataView(new ArrayBuffer(22));
+  eo.setUint32(0,0x06054b50,true);eo.setUint16(8,files.length,true);eo.setUint16(10,files.length,true);
+  eo.setUint32(12,cdSize,true);eo.setUint32(16,offset,true);
+  return new Blob([...parts,...central,new Uint8Array(eo.buffer)],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+}
+const xesc=s=>String(s??'').replace(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g,'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const colName=i=>{let s='';i++;while(i){const m=(i-1)%26;s=String.fromCharCode(65+m)+s;i=Math.floor((i-1)/26)}return s};
+function sheetXML(rows,widths,wrapCols=[]){
+  const cols=widths.map((w,i)=>`<col min="${i+1}" max="${i+1}" width="${w}" customWidth="1"/>`).join('');
+  const body=rows.map((r,ri)=>`<row r="${ri+1}">`+r.map((v,ci)=>{
+    const s=ri===0?' s="1"':wrapCols.includes(ci)?' s="2"':'';
+    return `<c r="${colName(ci)}${ri+1}" t="inlineStr"${s}><is><t xml:space="preserve">${xesc(v)}</t></is></c>`}).join('')+'</row>').join('');
+  return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetViews><sheetView workbookViewId="0"><pane ySplit="1" topLeftCell="A2" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews><cols>${cols}</cols><sheetData>${body}</sheetData></worksheet>`;
+}
+function buildXlsx(sheets){
+  const NS='http://schemas.openxmlformats.org/spreadsheetml/2006/main', R='http://schemas.openxmlformats.org/officeDocument/2006/relationships';
+  const files=[
+    {name:'[Content_Types].xml',content:`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>${sheets.map((s,i)=>`<Override PartName="/xl/worksheets/sheet${i+1}.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>`).join('')}</Types>`},
+    {name:'_rels/.rels',content:`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="${R}/officeDocument" Target="xl/workbook.xml"/></Relationships>`},
+    {name:'xl/workbook.xml',content:`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><workbook xmlns="${NS}" xmlns:r="${R}"><sheets>${sheets.map((s,i)=>`<sheet name="${xesc(s.name)}" sheetId="${i+1}" r:id="rId${i+1}"/>`).join('')}</sheets></workbook>`},
+    {name:'xl/_rels/workbook.xml.rels',content:`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">${sheets.map((s,i)=>`<Relationship Id="rId${i+1}" Type="${R}/worksheet" Target="worksheets/sheet${i+1}.xml"/>`).join('')}<Relationship Id="rId${sheets.length+1}" Type="${R}/styles" Target="styles.xml"/></Relationships>`},
+    {name:'xl/styles.xml',content:`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><styleSheet xmlns="${NS}"><fonts count="2"><font><sz val="11"/><name val="Calibri"/></font><font><b/><sz val="11"/><name val="Calibri"/></font></fonts><fills count="3"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill><fill><patternFill patternType="solid"><fgColor rgb="FFDFEAE2"/><bgColor indexed="64"/></patternFill></fill></fills><borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="3"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/><xf numFmtId="0" fontId="1" fillId="2" borderId="0" xfId="0" applyFont="1" applyFill="1"/><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0" applyAlignment="1"><alignment wrapText="1" vertical="top"/></xf></cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>`},
+    ...sheets.map((s,i)=>({name:`xl/worksheets/sheet${i+1}.xml`,content:sheetXML(s.rows,s.widths,s.wrap)}))
+  ];
+  return zipStore(files);
+}
+const MAIN_WIDTHS=[18,20,10,12,16,10,10,12,14,18,12,30,30,48];
+function mainRows(rows){return [[...FIELDS.map(f=>LABELS[f]),'面試紀錄'],...rows.map(d=>[...FIELDS.map(f=>f==='origin'?org(d):f==='status'?st(d.status).k:(d[f]||'')),(d.interviews||[]).map(ivText).join('；')])]}
+function ivRows(rows){
+  const out=[['公司','職位','輪次','日期時間','形式','結果','筆記']];
+  rows.forEach(d=>(d.interviews||[]).forEach(iv=>out.push([d.company,d.position,iv.round,fmtDT(iv.when),iv.mode,iv.result,iv.note])));
+  return out;
+}
+function exportRows(rows,tag){
+  if(!rows.length){toast('目前沒有資料可以匯出');return false}
+  const blob=buildXlsx([
+    {name:'投遞紀錄',rows:mainRows(rows),widths:MAIN_WIDTHS,wrap:[12,13]},
+    {name:'面試紀錄',rows:ivRows(rows),widths:[18,20,10,18,8,10,40],wrap:[6]}
+  ]);
+  downloadBlob(`求職投遞紀錄${tag?'_'+tag:''}_${todayStr()}.xlsx`,blob);
+  if(!tag)localStorage.setItem(KEY+'-lastExport',Date.now());
+  return true;
+}
+
+/* ---------- Calendar (.ics) ---------- */
+function icsEsc(s){return String(s||'').replace(/\\/g,'\\\\').replace(/[,;]/g,m=>'\\'+m).replace(/\r?\n/g,'\\n')}
+function icsDT(s){return s.replace(/[-:]/g,'').slice(0,13)+'00'}
+function icsEvent(d,iv){
+  const allDay=!hasTime(iv.when), s0=ivStart(iv.when);
+  let startL,endL;
+  if(allDay){
+    const e=new Date(s0);e.setDate(e.getDate()+1);
+    startL=`DTSTART;VALUE=DATE:${ymd(s0).replace(/-/g,'')}`;endL=`DTEND;VALUE=DATE:${ymd(e).replace(/-/g,'')}`;
+  }else{
+    const end=new Date(s0.getTime()+36e5);
+    startL=`DTSTART:${icsDT(iv.when)}`;endL=`DTEND:${icsDT(`${ymd(end)}T${pad(end.getHours())}:${pad(end.getMinutes())}`)}`;
+  }
+  const now=new Date().toISOString().replace(/[-:]/g,'').slice(0,15)+'Z';
+  const desc=[d.position&&`職位：${d.position}`,d.contact&&`聯絡人：${d.contact}`,iv.note&&`筆記：${iv.note}`,allDay&&'時間未定',d.link].filter(Boolean).join('\n');
+  return ['BEGIN:VEVENT',`UID:${d.id}-${iv.when.replace(/\D/g,'')}@job-log`,`DTSTAMP:${now}`,startL,endL,
+    `SUMMARY:${icsEsc(`【面試】${d.company} ${iv.round}`)}`,`LOCATION:${icsEsc([iv.mode,d.location].filter(Boolean).join(' · '))}`,
+    `DESCRIPTION:${icsEsc(desc)}`,'BEGIN:VALARM',`TRIGGER:${allDay?'-PT15H':'-PT1H'}`,'ACTION:DISPLAY',`DESCRIPTION:${icsEsc(d.company+' '+iv.round)}`,'END:VALARM','END:VEVENT'].join('\r\n');
+}
+function downloadICS(pairs,name){
+  pairs=pairs.filter(p=>p.iv.when);
+  if(!pairs.length){toast('沒有排定時間的面試');return}
+  const body=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//JobLog//ZH-TW','CALSCALE:GREGORIAN',...pairs.map(p=>icsEvent(p.d,p.iv)),'END:VCALENDAR'].join('\r\n');
+  downloadBlob(name,new Blob([body],{type:'text/calendar;charset=utf-8'}));
+  toast(`已下載 ${pairs.length} 場面試，打開檔案即可加入行事曆`);
+}
+
+/* ---------- Import ---------- */
+function parseCSV(t){
+  t=t.replace(/^﻿/,'');const rows=[];let r=[],c='',q=false;
+  for(let i=0;i<t.length;i++){const ch=t[i];
+    if(q){if(ch==='"'){if(t[i+1]==='"'){c+='"';i++}else q=false}else c+=ch}
+    else if(ch==='"')q=true;else if(ch===','){r.push(c);c=''}
+    else if(ch==='\n'||ch==='\r'){if(ch==='\r'&&t[i+1]==='\n')i++;r.push(c);rows.push(r);r=[];c=''}
+    else c+=ch}
+  if(c||r.length){r.push(c);rows.push(r)}
+  return rows;
+}
+async function unzip(buf){
+  const dv=new DataView(buf), u8=new Uint8Array(buf), dec=new TextDecoder();
+  let e=buf.byteLength-22;while(e>=0&&dv.getUint32(e,true)!==0x06054b50)e--;
+  if(e<0)throw new Error('不是有效的 .xlsx 檔');
+  const count=dv.getUint16(e+10,true);let p=dv.getUint32(e+16,true);const out={};
+  for(let i=0;i<count;i++){
+    const method=dv.getUint16(p+10,true), csize=dv.getUint32(p+20,true), nl=dv.getUint16(p+28,true), xl=dv.getUint16(p+30,true), cl=dv.getUint16(p+32,true), lo=dv.getUint32(p+42,true);
+    const name=dec.decode(u8.subarray(p+46,p+46+nl));p+=46+nl+xl+cl;
+    if(!/^xl\/(sharedStrings|workbook|worksheets\/|_rels\/workbook)/.test(name))continue;
+    const start=lo+30+dv.getUint16(lo+26,true)+dv.getUint16(lo+28,true);
+    const raw=u8.subarray(start,start+csize);
+    out[name]=method===0?dec.decode(raw):await new Response(new Blob([raw]).stream().pipeThrough(new DecompressionStream('deflate-raw'))).text();
+  }
+  return out;
+}
+async function parseXLSX(buf){
+  const files=await unzip(buf);
+  const xml=s=>new DOMParser().parseFromString(s,'application/xml');
+  const shared=files['xl/sharedStrings.xml']?[...xml(files['xl/sharedStrings.xml']).getElementsByTagName('si')].map(si=>[...si.getElementsByTagName('t')].map(t=>t.textContent).join('')):[];
+  let sheetPath='xl/worksheets/sheet1.xml';
+  if(files['xl/workbook.xml']&&files['xl/_rels/workbook.xml.rels']){
+    const first=xml(files['xl/workbook.xml']).getElementsByTagName('sheet')[0];
+    const rid=first&&(first.getAttribute('r:id')||first.getAttributeNS('http://schemas.openxmlformats.org/officeDocument/2006/relationships','id'));
+    const rel=[...xml(files['xl/_rels/workbook.xml.rels']).getElementsByTagName('Relationship')].find(r=>r.getAttribute('Id')===rid);
+    if(rel){const t=rel.getAttribute('Target').replace(/^\//,'');sheetPath=t.startsWith('xl/')?t:'xl/'+t}
+  }
+  if(!files[sheetPath])sheetPath=Object.keys(files).find(k=>/^xl\/worksheets\/.*\.xml$/.test(k));
+  const doc=xml(files[sheetPath]);const out=[];
+  const colIdx=ref=>{const L=ref.match(/^[A-Z]+/)[0];let n=0;for(const ch of L)n=n*26+ch.charCodeAt(0)-64;return n-1};
+  [...doc.getElementsByTagName('row')].forEach(row=>{
+    const r=+row.getAttribute('r')-1, arr=[];
+    [...row.getElementsByTagName('c')].forEach(c=>{
+      const t=c.getAttribute('t'), v=c.getElementsByTagName('v')[0], ref=c.getAttribute('r');
+      let val='';
+      if(t==='s')val=shared[+v?.textContent]??'';
+      else if(t==='inlineStr')val=[...c.getElementsByTagName('t')].map(x=>x.textContent).join('');
+      else if(v){val=v.textContent;if(t!=='str'&&t!=='b'&&t!=='e'&&!isNaN(val))val=+val}
+      arr[ref?colIdx(ref):arr.length]=val;
+    });
+    out[r]=arr;
+  });
+  return out.filter(Boolean).map(r=>Array.from(r,x=>x??''));
+}
+function rowsToRecords(rows){
+  rows=rows.filter(r=>r&&r.some(c=>String(c??'').trim()!==''));
+  if(rows.length<2)throw new Error('檔案裡沒有找到資料');
+  const head=rows[0].map(h=>String(h??'').trim().toLowerCase());
+  const map={};
+  FIELDS.forEach(f=>{const i=head.findIndex(h=>ALIASES[f].includes(h));if(i>-1)map[f]=i});
+  FIELDS.forEach(f=>{if(map[f]===undefined){const i=head.findIndex((h,idx)=>!Object.values(map).includes(idx)&&ALIASES[f].some(a=>a.length>1&&h.includes(a)));if(i>-1)map[f]=i}});
+  if(map.company===undefined&&map.position===undefined)throw new Error('找不到「公司」或「職位」欄位，請確認第一列是欄位名稱。');
+  const used=new Set(Object.values(map));
+  const ivLog=head.findIndex(h=>['面試紀錄','面試記錄','interviews','interview log'].includes(h));
+  // columns like 一面 / 二面日期 / 面試日期 become interview rounds
+  const ivCols=head.map((h,i)=>{if(used.has(i)||i===ivLog)return null;
+    const m=h.match(/^(一|二|三|四|五|終|主管|hr)\s*面/i);if(m)return {i,round:m[1].toUpperCase()==='HR'?'HR面':m[1]+'面'};
+    if(/^(面試日期|面試時間|interview date|interview)$/.test(h))return {i,round:'一面'};
+    if(/筆試|測驗/.test(h))return {i,round:'筆試/測驗'};return null}).filter(Boolean);
+  return rows.slice(1).map(r=>{const o={id:uid()};FIELDS.forEach(f=>o[f]=map[f]!==undefined?String(r[map[f]]??'').trim():'');
+    o.date=normDate(map.date!==undefined?r[map.date]:'');o.nextDate=normDate(map.nextDate!==undefined?r[map.nextDate]:'');
+    o.interviews=ivLog>-1?parseIvText(r[ivLog]):[];
+    ivCols.forEach(c=>{const v=r[c.i];if(v===''||v==null)return;const when=normDT(v);
+      o.interviews.push({round:c.round,when,mode:'',result:isFuture(when)?'待面試':'等結果',note:when?'':String(v)})});
+    const rm=String(o.status).match(/(一|二|三|四|終|主管|HR)面/i);
+    if(rm&&!o.interviews.length)o.interviews.push({round:rm[0],when:'',mode:'',result:'待面試',note:''});
+    // the backup's status is trusted as-is; it is only derived when the column is blank
+    const rawStatus=o.status;o.status=rawStatus?normStatus(rawStatus):'';
+    o.origin=(map.origin!==undefined&&o.origin)||normOrigin(o.channel)==='公司邀約'?normOrigin(o.origin||o.channel):'';
+    return o}).filter(o=>o.company||o.position);
+}
+// the Excel file is the source of truth: importing replaces everything
+function importRecords(incoming){
+  // collapse duplicate rows inside the file itself
+  const uniq=new Map();
+  incoming.forEach(o=>{const k=dupKey(o);if(uniq.has(k))mergeInto(uniq.get(k),o);else uniq.set(k,o)});
+  incoming=[...uniq.values()];
+  if(data.length&&!confirm(`要從這個備份還原嗎？\n\n網頁上現有的 ${data.length} 筆紀錄，會換成備份檔裡的 ${incoming.length} 筆。\n（還原後 10 秒內可以按「復原」）`))return;
+  snapshot();
+  data=incoming.map(o=>normalizeRecord(fillDefaults(o)));
+  finishImport(`已從備份還原 ${data.length} 筆`);
+}
+function finishImport(msg){save();filter=null;attnOnly=false;page=1;selected.clear();render();toast(msg,{undo:true})}
+</script>
+<script>
+/* ---------- Filtering & sorting ---------- */
+function matches(d,q){
+  return FIELDS.some(f=>String(d[f]||'').toLowerCase().includes(q))||(d.interviews||[]).some(iv=>ivText(iv).toLowerCase().includes(q));
+}
+function getRows(keepClosed){
+  const q=$('#q').value.trim().toLowerCase(), of=$('#originF').value;
+  // default (no card picked) = 進行中: closed records stay hidden unless 全部 or a status card is picked
+  const hide=!keepClosed&&!filter&&!ghostOnly;
+  const base=data.filter(d=>(!filter||filter==='ALL'||st(d.status).k===filter)&&(!attnOnly||attention(d).length)&&(!ghostOnly||ghost(d)||ivGhost(d))&&(!of||org(d)===of)&&(!q||matches(d,q)));
+  const rows=hide?base.filter(d=>!CLOSED.includes(st(d.status).k)):base;
+  hiddenClosed=base.length-rows.length;
+  const val={
+    company:d=>d.company||'', channel:d=>d.channel||'', date:d=>d.date||'',
+    status:d=>STATUSES.indexOf(st(d.status)), nextDate:d=>d.nextDate||((nextInterview(d)||{}).when||'').slice(0,10),
+    interview:d=>{const c=currentInterview(d);return c&&c.when||''}
+  }[sortKey];
+  rows.sort((a,b)=>{
+    const x=val(a), y=val(b);
+    if(typeof x==='string'){if(!x&&y)return 1;if(x&&!y)return -1;return x.localeCompare(y,'zh-Hant')*sortDir}
+    return (x-y)*sortDir;
+  });
+  return rows;
+}
+
+/* ---------- Header widgets ---------- */
+function renderStats(){
+  const counts=Object.fromEntries(STATUSES.map(s=>[s.k,0]));
+  data.forEach(d=>counts[st(d.status).k]++);
+  const open=data.filter(d=>!CLOSED.includes(st(d.status).k)).length, inv=data.filter(d=>org(d)==='公司邀約').length;
+  $('#stats').innerHTML=`<div class="stat ${!filter?'on':''}" data-f=""><div class="n">${open}</div><div class="l">進行中</div></div>`+
+    `<div class="stat ${filter==='ALL'?'on':''}" data-f="ALL"><div class="n">${data.length}</div><div class="l">全部${inv?` · 邀約 ${inv}`:''}</div></div>`+
+    STATUSES.map(s=>`<div class="stat ${filter===s.k?'on':''}" data-f="${s.k}"><div class="n" style="color:${s.c}">${counts[s.k]}</div><div class="l"><span class="dot" style="background:${s.c}"></span>${s.k}</div></div>`).join('');
+  $('#bar').innerHTML=data.length?STATUSES.filter(s=>counts[s.k]).map(s=>`<div data-tip="${s.k}：${counts[s.k]} 筆" style="width:${counts[s.k]/data.length*100}%;background:${s.c}"></div>`).join(''):'';
+  // picking a status card clears the special one-off filters so they can't silently combine
+  document.querySelectorAll('.stat').forEach(el=>el.onclick=()=>{filter=el.dataset.f||null;ghostOnly=false;attnOnly=false;page=1;render()});
+}
+function upcomingPairs(days){
+  const now=new Date(), lim=days?new Date(Date.now()+days*864e5):null, out=[];
+  data.forEach(d=>(d.interviews||[]).forEach(iv=>{if(!isFuture(iv.when))return;const t=ivStart(iv.when);if(!lim||t<lim)out.push({d,iv,t})}));
+  return out.sort((a,b)=>a.t-b.t);
+}
+function renderUpcoming(){
+  const items=upcomingPairs(14), attnN=data.filter(d=>attention(d).length).length, allFuture=upcomingPairs(0).length;
+  const offers=data.filter(d=>st(d.status).k==='錄取').length;
+  let html='';
+  if(ghostOnly)html+=`<span class="chip ghost" id="ghostChip">📭 只顯示很久沒消息的紀錄（點擊取消）</span>`;
+  if(attnN)html+=`<span class="chip attn ${attnOnly?'on':''}" id="attnChip">⚠ ${attnN} 筆待處理${attnOnly?'（顯示中，點擊取消）':''}</span>`;
+  if(offers)html+=`<span class="chip offer" id="cmpChip">🎉 ${offers} 個錄取${offers>1?' · 並排比較':' · 查看'}</span>`;
+  if(items.length)html+=`<span class="lab">未來兩週面試</span>`+items.map(x=>`<span class="chip" data-open="${x.d.id}"><b>${x.t.getMonth()+1}/${x.t.getDate()}（${WD[x.t.getDay()]}）${hasTime(x.iv.when)?x.iv.when.slice(11,16):'時間未定'}</b>${esc(x.d.company)} ${esc(x.iv.round)}${x.iv.mode?' · '+esc(x.iv.mode):''}</span>`).join('');
+  if(allFuture)html+=`<span class="chip ics" id="icsAll">📅 全部面試加入行事曆（${allFuture} 場）</span>`;
+  $('#upcoming').innerHTML=html;
+  $('#upcoming').querySelectorAll('[data-open]').forEach(el=>el.onclick=()=>openDlg(el.dataset.open));
+  const a=$('#attnChip');if(a)a.onclick=()=>{attnOnly=!attnOnly;if(attnOnly){filter=null;ghostOnly=false}page=1;render()};
+  const g=$('#ghostChip');if(g)g.onclick=()=>{ghostOnly=false;page=1;render()};
+  const c=$('#cmpChip');if(c)c.onclick=openCompare;
+  const i=$('#icsAll');if(i)i.onclick=()=>downloadICS(upcomingPairs(0),`面試行事曆_${todayStr()}.ics`);
+}
+function renderSuggest(){
+  const a=data.filter(ghost).length, b=data.filter(ivGhost).length, snooze=+localStorage.getItem(KEY+'-ghostSnooze')||0;
+  $('#sugg').classList.toggle('show',a+b>0&&Date.now()>snooze&&!ghostOnly);
+  const parts=[];
+  if(a)parts.push(`<b>${a}</b> 筆投遞超過 30 天都沒消息（建議改成「無回應」）`);
+  if(b)parts.push(`<b>${b}</b> 筆面試完超過 14 天還沒有結果（建議改成「未錄取」）`);
+  $('#suggMsg').innerHTML=`有 ${parts.join('，')}。`;
+  $('#suggApply').textContent=a&&b?'全部照建議修改':a?'全部改成無回應':'全部改成未錄取';
+}
+function renderBackup(){
+  const last=+localStorage.getItem(KEY+'-lastExport')||0, snooze=+localStorage.getItem(KEY+'-snooze')||0;
+  const days=last?Math.floor((Date.now()-last)/864e5):null;
+  const show=data.length>0&&Date.now()>snooze&&(days===null||days>=7);
+  $('#backup').classList.toggle('show',show);
+  if(show)$('#backupMsg').textContent=days===null?'還沒有備份過。':`已經 ${days} 天沒有備份了。`;
+}
+
+/* ---------- Table ---------- */
+function ivCell(d){
+  const l=d.interviews||[];if(!l.length)return '<span class="nil">—</span>';
+  const cur=currentInterview(d), up=isFuture(cur.when), ago=cur.when&&!up?daysSinceIv(cur):null;
+  // the status pill already says "waiting"; only show a result tag once there is a verdict
+  const tag=['通過','未通過'].includes(cur.result)?`<span class="res res-${esc(cur.result)}">${esc(cur.result)}</span>`:'';
+  return `<div class="iv-cell"><span class="rd">${esc(cur.round)}</span>${tag}
+    ${cur.when?`<div class="when ${up?'up':''}">${esc(fmtDT(cur.when))}${cur.mode?' · '+esc(cur.mode):''}</div>`:''}
+    ${ago!==null||l.length>1?`<div class="sub">${ago!==null?(ago===0?'今天':ago+' 天前'):''}${ago!==null&&l.length>1?' · ':''}${l.length>1?l.map(x=>esc(x.round)).join(' → '):''}</div>`:''}</div>`;
+}
+const flagsHTML=d=>attention(d).map(a=>`<span class="flag ${a.k==='today'?'today':''}">${a.t}</span>`).join('');
+// 下一步 is for non-interview to-dos; when it's empty, fall back to the next scheduled interview
+function nextCell(d,over){
+  const f=flagsHTML(d), flags=f?`<div class="flags">${f}</div>`:'';
+  if(d.next||d.nextDate)return flags+`${d.next?esc(d.next):'<span class="nil">—</span>'}${d.nextDate?`<div><b class="${over?'warn':''}">${esc(d.nextDate)}</b></div>`:''}`;
+  const nx=nextInterview(d);
+  if(nx)return flags+`<span style="color:var(--plum)">📅 ${esc(nx.round)}</span><div><b>${esc(fmtDT(nx.when))}</b></div>`;
+  return flags||'<span class="nil">—</span>';
+}
+function renderTable(rows){
+  document.querySelectorAll('th[data-sort]').forEach(th=>{th.classList.toggle('asc',th.dataset.sort===sortKey&&sortDir===1);th.classList.toggle('desc',th.dataset.sort===sortKey&&sortDir===-1)});
+  const pages=Math.max(1,Math.ceil(rows.length/pageSize));
+  page=Math.min(Math.max(1,page),pages);
+  const total=rows.length, from=(page-1)*pageSize;
+  rows=rows.slice(from,from+pageSize);
+  renderPager(total,pages,from);
+  visibleIds=rows.map(d=>d.id);
+  updateBulk();
+  if(!rows.length){
+    $('#tbody').innerHTML=`<tr><td colspan="10"><div class="empty"><div class="big">${data.length?'沒有符合的紀錄':'還沒有任何投遞紀錄'}</div>${hiddenClosed?`另有 ${hiddenClosed} 筆已結束的紀錄，點上方「全部」卡片就能看到`:data.length?'換個關鍵字或篩選試試':'按「新增投遞」開始記錄，或從之前的備份還原'}</div></td></tr>`;
+    return;
+  }
+  $('#tbody').innerHTML=rows.map(d=>{
+    const S=st(d.status), ds=daysSince(d.date), inb=org(d)==='公司邀約', over=d.nextDate&&d.nextDate<todayStr()&&!CLOSED.includes(S.k);
+    return `<tr class="${selected.has(d.id)?'sel':''}">
+      <td class="ck"><input type="checkbox" class="cb" data-ck="${d.id}" ${selected.has(d.id)?'checked':''}></td>
+      <td><div class="co">${esc(d.company)}${inb?'<span class="inb">公司邀約</span>':''}${d.link?`<a href="${esc(d.link)}" target="_blank" rel="noopener">職缺↗</a>`:''}</div><div class="sub">${esc(d.position)}</div></td>
+      <td><div class="date">${esc(d.date||'—')}</div>${ds!==null?`<div class="days">${inb?'聯繫':'投遞'} · ${ds===0?'今天':ds>0?ds+' 天前':-ds+' 天後'}</div>`:''}</td>
+      <td>${d.channel?esc(d.channel):'<span class="nil">—</span>'}</td>
+      <td><select class="pill" data-id="${d.id}" style="background:${S.bg};color:${S.c}">${STATUSES.map(x=>`<option ${x.k===S.k?'selected':''}>${x.k}</option>`).join('')}</select></td>
+      <td>${ivCell(d)}</td>
+      <td>${d.location?esc(d.location):'<span class="nil">—</span>'}${d.salary?`<div class="sub">${esc(d.salary)}</div>`:''}</td>
+      <td class="next">${nextCell(d,over)}${d.contact?`<div class="sub">聯絡：${esc(d.contact)}</div>`:''}</td>
+      <td class="note">${d.note?esc(d.note):'<span class="nil">—</span>'}</td>
+      <td class="row-act"><button data-edit="${d.id}">編輯</button></td>
+    </tr>`}).join('');
+  document.querySelectorAll('select.pill').forEach(el=>el.onchange=()=>setStatus(el.dataset.id,el.value));
+  document.querySelectorAll('[data-edit]').forEach(el=>el.onclick=()=>openDlg(el.dataset.edit));
+  document.querySelectorAll('[data-ck]').forEach(el=>el.onchange=()=>{
+    el.checked?selected.add(el.dataset.ck):selected.delete(el.dataset.ck);
+    el.closest('tr').classList.toggle('sel',el.checked);updateBulk();
+  });
+}
+function setStatus(id,v){
+  const r=data.find(x=>x.id===id);if(!r||r.status===v)return;
+  snapshot();applyStatusToInterviews(r,v);r.status=v;save();render();toast(`${r.company} → ${v}`,{undo:true});
+}
+function renderPager(total,pages,from){
+  const el=$('#pager');
+  if(!total){el.innerHTML='';return}
+  const nums=[];for(let i=1;i<=pages;i++)if(i===1||i===pages||Math.abs(i-page)<=1)nums.push(i);
+  const btns=[];nums.forEach((n,i)=>{if(i&&n-nums[i-1]>1)btns.push('<span>…</span>');btns.push(`<button class="pg ${n===page?'cur':''}" data-pg="${n}">${n}</button>`)});
+  el.innerHTML=`<div>共 ${total} 筆 · 顯示第 ${from+1}–${Math.min(from+pageSize,total)} 筆${hiddenClosed?`（另有 ${hiddenClosed} 筆已結束，點「全部」查看）`:''}</div>
+    <div class="pages"><button class="pg" data-pg="${page-1}" ${page===1?'disabled':''}>‹</button>${btns.join('')}<button class="pg" data-pg="${page+1}" ${page===pages?'disabled':''}>›</button></div>
+    <div>每頁<select id="pageSize">${[10,20,50,100].map(n=>`<option ${n===pageSize?'selected':''}>${n}</option>`).join('')}</select>筆</div>`;
+  el.querySelectorAll('[data-pg]').forEach(b=>b.onclick=()=>{page=+b.dataset.pg;render();$('.table-wrap').scrollIntoView({behavior:'smooth',block:'start'})});
+  $('#pageSize').onchange=e=>{pageSize=+e.target.value;localStorage.setItem(KEY+'-pagesize',pageSize);page=1;render()};
+}
+
+/* ---------- Kanban ---------- */
+const KB_CLOSED_LIMIT=5;
+const kbExpanded=new Set();
+function renderKanban(rows){
+  visibleIds=[];updateBulk();
+  // under 進行中 the finished columns are left out, but stay reachable as a slim drop strip under the board
+  const hideMode=!filter&&!ghostOnly;
+  const cols=hideMode?STATUSES.filter(s=>!CLOSED.includes(s.k)):STATUSES;
+  $('#kanban').style.gridTemplateColumns=`repeat(${cols.length},minmax(0,1fr))`;
+  $('#kbHidden').textContent='';
+  const drops=hideMode?`<div class="drops"><span class="drops-h">已結束</span>${STATUSES.filter(s=>CLOSED.includes(s.k)).map(s=>
+    `<div class="drop" data-status="${s.k}" title="把卡片拖到這裡就會改成「${s.k}」，點一下可以查看"><span class="dot" style="background:${s.c}"></span>${s.k}<span class="c">${data.filter(d=>st(d.status).k===s.k).length}</span></div>`).join('')}</div>`:'';
+  $('#kanban').innerHTML=cols.map(s=>{
+    const list=rows.filter(d=>st(d.status).k===s.k), closed=CLOSED.includes(s.k);
+    // finished columns show a few slim cards; the rest stay folded until asked for
+    const shown=closed&&!kbExpanded.has(s.k)?list.slice(0,KB_CLOSED_LIMIT):list;
+    return `<div class="col" data-status="${s.k}">
+      <div class="col-h"><span class="dot" style="background:${s.c}"></span>${s.k}<span class="c">${list.length}</span></div>
+      <div class="col-body ${shown.length?'':'empty'}">
+      ${shown.map(d=>{const nx=nextInterview(d), ld=lastDone(d);return `<div class="card ${closed?'slim':''}" draggable="true" data-id="${d.id}" style="border-left-color:${s.c}" title="${esc(d.company)}｜${esc(d.position)}">
+        <div class="t">${esc(d.company)}${org(d)==='公司邀約'?'<span class="inb">邀約</span>':''}</div>
+        <div class="p">${esc(d.position)}</div>
+        <div class="m">${esc(d.date||'')}${d.channel?' · '+esc(d.channel):''}</div>
+        ${nx?`<div class="m" style="color:var(--plum);font-weight:600">${esc(nx.round)} ${esc(fmtDT(nx.when))}</div>`:ld?`<div class="m">${esc(ld.round)}後 ${daysSinceIv(ld)} 天 · ${esc(ld.result)}</div>`:''}
+        ${flagsHTML(d)?`<div style="margin-top:4px">${flagsHTML(d)}</div>`:''}
+      </div>`}).join('')}
+      </div>
+      ${closed&&list.length>KB_CLOSED_LIMIT?`<button class="col-more" data-more="${s.k}">${kbExpanded.has(s.k)?'收起':`顯示其餘 ${list.length-KB_CLOSED_LIMIT} 筆`}</button>`:''}
+    </div>`}).join('')+drops;
+  document.querySelectorAll('.drop').forEach(c=>{
+    c.onclick=()=>{filter=c.dataset.status;page=1;render()};
+    c.ondragover=e=>{e.preventDefault();c.classList.add('over')};
+    c.ondragleave=()=>c.classList.remove('over');
+    c.ondrop=e=>{e.preventDefault();c.classList.remove('over');setStatus(e.dataTransfer.getData('text/plain'),c.dataset.status)};
+  });
+  document.querySelectorAll('[data-more]').forEach(b=>b.onclick=()=>{const k=b.dataset.more;kbExpanded.has(k)?kbExpanded.delete(k):kbExpanded.add(k);render()});
+  document.querySelectorAll('.card').forEach(c=>{
+    c.ondragstart=e=>{e.dataTransfer.setData('text/plain',c.dataset.id);c.classList.add('dragging')};
+    c.ondragend=()=>c.classList.remove('dragging');
+    c.onclick=()=>openDlg(c.dataset.id);
+  });
+  document.querySelectorAll('.col').forEach(col=>{
+    col.ondragover=e=>{e.preventDefault();col.classList.add('over')};
+    col.ondragleave=()=>col.classList.remove('over');
+    col.ondrop=e=>{e.preventDefault();col.classList.remove('over');setStatus(e.dataTransfer.getData('text/plain'),col.dataset.status)};
+  });
+}
+
+/* ---------- Analytics ---------- */
+const pct=(a,b)=>b?Math.round(a/b*100)+'%':'—';
+const interviewed=d=>(d.interviews||[]).length>0||['面試中','等待結果','錄取'].includes(st(d.status).k);
+const replied=d=>!['已投遞','無回應'].includes(st(d.status).k)||interviewed(d);
+function renderAnalytics(rows){
+  visibleIds=[];updateBulk();
+  if(!rows.length){$('#analytics').innerHTML='<div class="panel full"><div class="empty"><div class="big">還沒有資料可以分析</div>新增或匯入紀錄後，這裡會顯示投遞成效。</div></div>';return}
+  const N=rows.length, rep=rows.filter(replied).length, iv=rows.filter(interviewed).length, ok=rows.filter(d=>st(d.status).k==='錄取').length;
+  const funnel=[['全部機會',N,''],['有回音',rep,pct(rep,N)+' 回覆率'],['進入面試',iv,pct(iv,N)+' 面試率'],['錄取',ok,pct(ok,N)+' 錄取率']];
+
+  // by channel: top 8, rest folded into 其他
+  const byCh={};rows.forEach(d=>{const k=d.channel||'（未填）';(byCh[k]||(byCh[k]={n:0,iv:0,ok:0})).n++;if(interviewed(d))byCh[k].iv++;if(st(d.status).k==='錄取')byCh[k].ok++});
+  let ch=Object.entries(byCh).sort((a,b)=>b[1].n-a[1].n);
+  if(ch.length>8){const rest=ch.slice(7).reduce((s,[,v])=>({n:s.n+v.n,iv:s.iv+v.iv,ok:s.ok+v.ok}),{n:0,iv:0,ok:0});ch=[...ch.slice(0,7),['其他',rest]]}
+  const maxN=Math.max(...ch.map(([,v])=>v.n));
+
+  // weekly volume, last 12 weeks (weeks start Monday)
+  const mon=new Date();mon.setHours(0,0,0,0);mon.setDate(mon.getDate()-((mon.getDay()+6)%7));
+  const weeks=[...Array(12)].map((_,i)=>{const s=new Date(mon);s.setDate(s.getDate()-7*(11-i));const e=new Date(s);e.setDate(e.getDate()+7);
+    const list=rows.filter(d=>{const t=parseDay(d.date);return t&&t>=s&&t<e});
+    return {s,n:list.length,inb:list.filter(d=>org(d)==='公司邀約').length}});
+  const maxW=Math.max(1,...weeks.map(w=>w.n));
+
+  const byOrg=['主動投遞','公司邀約'].map(o=>{const l=rows.filter(d=>org(d)===o);return [o,l.length,l.filter(interviewed).length,l.filter(d=>st(d.status).k==='錄取').length]});
+  const byRound={};rows.forEach(d=>(d.interviews||[]).forEach(x=>{const r=byRound[x.round]||(byRound[x.round]={n:0,pass:0,fail:0});r.n++;if(x.result==='通過')r.pass++;if(x.result==='未通過')r.fail++}));
+  const roundRows=ROUNDS.filter(r=>byRound[r]).concat(Object.keys(byRound).filter(r=>!ROUNDS.includes(r)));
+
+  $('#analytics').innerHTML=`
+    <div class="panel full"><h3>投遞漏斗</h3><p class="desc">全部 ${N} 筆紀錄，不受上方卡片、搜尋和來源篩選影響。百分比都是相對於全部機會。</p>
+      <div class="funnel">${funnel.map(([l,n,r])=>`<div class="fstep"><div class="n">${n}</div><div class="l">${l}</div>${r?`<div class="r">${r}</div>`:''}</div>`).join('')}</div></div>
+    <div class="panel"><h3>哪個管道最有效</h3><p class="desc">淺色是總筆數，深色是其中進到面試的筆數。</p>
+      <div class="legend"><span><i style="background:#c9d9ce"></i>總筆數</span><span><i style="background:var(--green)"></i>進入面試</span></div>
+      ${ch.map(([k,v])=>`<div class="hbar" data-tip="${esc(k)}：${v.n} 筆，面試 ${v.iv}（${pct(v.iv,v.n)}），錄取 ${v.ok}">
+        <div class="nm">${esc(k)}</div>
+        <div class="track"><div class="fill ghost" style="width:${v.n/maxN*100}%"></div><div class="fill" style="width:${v.iv/maxN*100}%"></div></div>
+        <div class="v">${v.n} 筆 · ${pct(v.iv,v.n)}</div></div>`).join('')}</div>
+    <div class="panel"><h3>每週新增機會</h3><p class="desc">最近 12 週，依投遞／聯繫日期計算。滑鼠移到長條上看細節。</p>
+      <div class="weeks">${weeks.map((w,i)=>`<div class="wk" data-tip="${w.s.getMonth()+1}/${w.s.getDate()} 那週：${w.n} 筆${w.inb?`（含邀約 ${w.inb}）`:''}">
+        <div class="b" style="height:${w.n/maxW*100}%"></div>${i%2===1||i===11?`<span class="lbl">${w.s.getMonth()+1}/${w.s.getDate()}</span>`:''}</div>`).join('')}</div>
+      <div style="height:24px"></div></div>
+    <div class="panel"><h3>主動投遞 vs 公司邀約</h3><p class="desc">看哪一種來源比較容易走到面試與錄取。</p>
+      <table class="an-table"><thead><tr><th>來源</th><th>筆數</th><th>面試率</th><th>錄取率</th></tr></thead>
+      <tbody>${byOrg.map(([o,n,i,k])=>`<tr><td>${o}</td><td>${n}</td><td>${pct(i,n)}</td><td>${pct(k,n)}</td></tr>`).join('')}</tbody></table></div>
+    <div class="panel"><h3>各輪面試結果</h3><p class="desc">通過率只算已經有結果（通過或未通過）的場次。</p>
+      ${roundRows.length?`<table class="an-table"><thead><tr><th>輪次</th><th>場次</th><th>通過</th><th>未通過</th><th>通過率</th></tr></thead>
+      <tbody>${roundRows.map(r=>{const v=byRound[r];return `<tr><td>${esc(r)}</td><td>${v.n}</td><td>${v.pass}</td><td>${v.fail}</td><td>${pct(v.pass,v.pass+v.fail)}</td></tr>`}).join('')}</tbody></table>`:'<p class="desc">還沒有面試紀錄。</p>'}</div>`;
+}
+
+/* ---------- Tooltip ---------- */
+document.addEventListener('mousemove',e=>{
+  const t=e.target.closest('[data-tip]'), tip=$('#tip');
+  if(!t){tip.classList.remove('show');return}
+  tip.textContent=t.dataset.tip;tip.classList.add('show');
+  const w=tip.offsetWidth;tip.style.left=Math.min(e.clientX+14,innerWidth-w-8)+'px';tip.style.top=(e.clientY+16)+'px';
+});
+
+/* ---------- Main render ---------- */
+function render(){
+  [...selected].forEach(id=>{if(!data.some(d=>d.id===id))selected.delete(id)});
+  // the "long silence" view is a one-off: drop it once nothing matches any more
+  if(ghostOnly&&!data.some(d=>ghost(d)||ivGhost(d)))ghostOnly=false;
+  renderStats();renderUpcoming();renderBackup();renderSuggest();
+  // the table and board follow the cards and filters; analytics always uses every record
+  const rows=getRows(view==='stats');
+  document.body.classList.toggle('v-stats',view==='stats');
+  $('#vTable').hidden=view!=='table';$('#vKanban').hidden=view!=='kanban';$('#vStats').hidden=view!=='stats';
+  document.querySelectorAll('#views button').forEach(b=>b.classList.toggle('on',b.dataset.v===view));
+  // analytics always looks at every record, regardless of cards, search or source filter
+  if(view==='table')renderTable(rows);else if(view==='kanban')renderKanban(rows);else renderAnalytics(data);
+}
+</script>
+<script>
+/* ---------- Edit dialog ---------- */
+$('#statusSel').innerHTML=STATUSES.map(s=>`<option>${s.k}</option>`).join('');
+const opts=(list,v)=>list.map(x=>`<option ${x===v?'selected':''}>${x}</option>`).join('');
+function ivRowHTML(iv){
+  const rounds=ROUNDS.includes(iv.round)||!iv.round?ROUNDS:[iv.round,...ROUNDS];
+  return `<div class="iv-row">
+    <select data-k="round">${opts(rounds,iv.round)}</select>
+    <input type="date" data-k="d" value="${esc((iv.when||'').slice(0,10))}">
+    <input type="time" data-k="t" value="${esc(hasTime(iv.when)?iv.when.slice(11,16):'')}" title="時間不確定可以留空">
+    <select data-k="mode"><option value="">形式</option>${opts(MODES,iv.mode)}</select>
+    <select data-k="result">${opts(RESULTS,iv.result||'待面試')}</select>
+    <input data-k="note" placeholder="面試官、考題、心得…" value="${esc(iv.note||'')}">
+    <button type="button" class="ic cal" title="下載這場面試的行事曆檔">📅</button>
+    <button type="button" class="ic rm" title="移除這輪">✕</button>
+  </div>`;
+}
+function renderIvList(list){
+  $('#ivList').innerHTML=list.length?list.map(ivRowHTML).join(''):'<div class="iv-empty">還沒有面試紀錄。收到面試通知時按「新增一輪」。</div>';
+  $('#ivList').querySelectorAll('.rm').forEach((b,i)=>b.onclick=()=>{const l=readIvList();l.splice(i,1);renderIvList(l);liveSync()});
+  $('#ivList').querySelectorAll('[data-k=result]').forEach(s=>s.onchange=liveSync);
+  $('#ivList').querySelectorAll('.cal').forEach((b,i)=>b.onclick=()=>{
+    const iv=readIvList()[i], f=$('#form').elements;
+    if(!iv.when)return toast('先填這一輪的日期時間');
+    const d={id:editingId||'new',company:f.company.value,position:f.position.value,location:f.location.value,contact:f.contact.value,link:f.link.value};
+    downloadICS([{d,iv}],`面試_${d.company||'未命名'}_${iv.round}.ics`);
+  });
+}
+function readIvList(){
+  return [...$('#ivList').querySelectorAll('.iv-row')].map(r=>{
+    const o={};r.querySelectorAll('[data-k]').forEach(el=>o[el.dataset.k]=el.value.trim());
+    o.when=o.d?(o.t?`${o.d}T${o.t}`:o.d):'';delete o.d;delete o.t;
+    return o;
+  });
+}
+$('#ivAdd').onclick=()=>{
+  const l=readIvList(), used=l.map(x=>x.round);
+  const nextRound=['一面','二面','三面','四面','終面'].find(r=>!used.includes(r))||'終面';
+  l.push({round:nextRound,when:'',mode:'',result:'待面試',note:''});renderIvList(l);liveSync();
+  $('#ivList').querySelector('.iv-row:last-child input[type=date]').focus();
+};
+// keep the status dropdown and the interview results in step while editing
+function liveSync(){
+  const tmp={status:$('#statusSel').value,interviews:readIvList().filter(x=>x.round||x.when)};
+  deriveStatus(tmp);$('#statusSel').value=st(tmp.status).k;
+}
+$('#statusSel').onchange=()=>{
+  const tmp={interviews:readIvList()};
+  applyStatusToInterviews(tmp,$('#statusSel').value);renderIvList(tmp.interviews);
+};
+function syncOrigin(swapStatus){
+  const f=$('#form'), inb=f.elements.origin.value==='公司邀約';
+  $('#dateLab').textContent=inb?'對方聯繫日期':'投遞日期';
+  $('#chLab').textContent=inb?'從哪裡找到我':'投遞管道';
+  f.elements.channel.placeholder=inb?'LinkedIn 私訊、獵頭、104 邀約…':'104、LinkedIn、內推…';
+  $('#ctLab').textContent=inb?'聯絡人（HR／獵頭）':'聯絡人';
+  $('#dlgTitle').classList.toggle('inbound',inb);
+  if(!swapStatus)return;
+  // flip the default status along with the origin toggle
+  const s=f.elements.status;
+  if(inb&&s.value==='已投遞')s.value='邀約洽談';
+  if(!inb&&s.value==='邀約洽談')s.value='已投遞';
+}
+document.querySelectorAll('input[name=origin]').forEach(r=>r.onchange=()=>syncOrigin(true));
+function openDlg(id,origin){
+  editingId=id||null;
+  const f=$('#form'), inb=origin==='公司邀約';
+  const d=id?data.find(x=>x.id===id):{date:todayStr(),origin:inb?'公司邀約':'主動投遞',status:inb?'邀約洽談':'已投遞'};
+  FIELDS.forEach(k=>f.elements[k].value=k==='origin'?org(d):k==='status'?st(d.status).k:(d[k]||''));
+  renderIvList((d.interviews||[]).map(x=>({...x})));
+  syncOrigin();
+  $('#dlgTitle').textContent=id?(org(d)==='公司邀約'?'編輯公司邀約':'編輯投遞'):(inb?'新增公司邀約':'新增投遞');
+  $('#delBtn').style.visibility=id?'visible':'hidden';
+  $('#dlg').showModal();
+}
+$('#addBtn').onclick=()=>openDlg();
+$('#addInBtn').onclick=()=>openDlg(null,'公司邀約');
+$('#cancelBtn').onclick=()=>$('#dlg').close();
+$('#delBtn').onclick=()=>{
+  const r=data.find(x=>x.id===editingId);snapshot();
+  data=data.filter(x=>x.id!==editingId);save();$('#dlg').close();render();toast(`已刪除 ${r?r.company:''}`,{undo:true});
+};
+$('#form').onsubmit=e=>{
+  const f=e.target, o={};FIELDS.forEach(k=>o[k]=f.elements[k].value.trim());
+  o.interviews=sortInterviews(readIvList().filter(x=>x.round||x.when));
+  // the dropdown already reflects both the live interview sync and any manual pick, so it is final
+  applyStatusToInterviews(o,o.status);
+  if(!editingId){
+    const dup=data.find(d=>dupKey(d)===dupKey(o));
+    if(dup&&!confirm(`已經有一筆「${dup.company}／${dup.position}」（${dup.date||'無日期'}）。\n還是要另外新增一筆嗎？`)){e.preventDefault();return}
+  }
+  snapshot();
+  if(editingId)Object.assign(data.find(x=>x.id===editingId),o);else data.push({id:uid(),...o});
+  save();render();toast('已儲存',{undo:true});
+};
+
+/* ---------- Bulk actions ---------- */
+$('#bulkStatus').innerHTML+=STATUSES.map(s=>`<option>${s.k}</option>`).join('');
+function updateBulk(){
+  const n=selected.size, vis=visibleIds.filter(id=>selected.has(id)).length;
+  $('#bulk').classList.toggle('show',n>0);
+  $('#bulkCnt').textContent=`已選 ${n} 筆`;
+  const all=$('#ckAll');all.checked=visibleIds.length>0&&vis===visibleIds.length;all.indeterminate=vis>0&&vis<visibleIds.length;
+}
+$('#ckAll').onchange=e=>{visibleIds.forEach(id=>e.target.checked?selected.add(id):selected.delete(id));render()};
+const picked=()=>data.filter(d=>selected.has(d.id));
+function bulkDone(msg,undo=true){selected.clear();save();render();toast(msg,{undo})}
+let bulkApply=null;
+function openBulk(title,body,apply){
+  $('#bTitle').textContent=title;$('#bBody').innerHTML=body;bulkApply=apply;
+  $('#bdlg').showModal();const first=$('#bBody').querySelector('input,textarea');if(first)first.focus();
+}
+$('#bCancel').onclick=()=>$('#bdlg').close();
+$('#bform').onsubmit=()=>{const el=$('#bform').elements;snapshot();bulkApply(el)};
+$('#bulkStatus').onchange=e=>{
+  const v=e.target.value;e.target.value='';if(!v)return;
+  const n=selected.size;snapshot();picked().forEach(d=>{applyStatusToInterviews(d,v);d.status=v});bulkDone(`${n} 筆 → ${v}`);
+};
+$('#bulkChannel').onclick=()=>openBulk(`改 ${selected.size} 筆的管道`,
+  `<label>管道<input name="ch" list="channels" placeholder="104、LinkedIn、內推…"></label>`,
+  el=>{picked().forEach(d=>d.channel=el.ch.value.trim());bulkDone('已更新管道')});
+$('#bulkNext').onclick=()=>openBulk(`設定 ${selected.size} 筆的下一步`,
+  `<label>下一步<input name="nx" placeholder="例：寄感謝信、追蹤進度"></label><label>日期（可留空）<input type="date" name="nd" value="${todayStr()}"></label>`,
+  el=>{picked().forEach(d=>{d.next=el.nx.value.trim();d.nextDate=el.nd.value});bulkDone('已設定下一步')});
+$('#bulkNote').onclick=()=>openBulk(`在 ${selected.size} 筆的備註後面加上`,
+  `<label>要加的文字<textarea name="nt" placeholder="原本的備註會保留，這段會加在後面"></textarea></label>`,
+  el=>{const v=el.nt.value.trim();if(!v)return;picked().forEach(d=>d.note=d.note?`${d.note}\n${v}`:v);bulkDone('已加上備註')});
+$('#bulkExport').onclick=()=>{if(exportRows(picked(),'選取'))bulkDone('已匯出選取的紀錄',false)};
+$('#bulkDel').onclick=()=>{
+  const n=selected.size;snapshot();data=data.filter(d=>!selected.has(d.id));bulkDone(`已刪除 ${n} 筆`);
+};
+$('#bulkClear').onclick=()=>{selected.clear();render()};
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&selected.size&&!$('#dlg').open&&!$('#bdlg').open){selected.clear();render()}});
+
+/* ---------- Toolbar, sorting, views ---------- */
+$('#q').oninput=()=>{page=1;render()};
+$('#originF').onchange=()=>{page=1;render()};
+
+/* ---------- "No reply" suggestion ---------- */
+$('#suggApply').onclick=()=>{
+  const a=data.filter(ghost), b=data.filter(ivGhost);if(!a.length&&!b.length)return;
+  snapshot();
+  a.forEach(d=>d.status='無回應');
+  b.forEach(d=>{applyStatusToInterviews(d,'未錄取');d.status='未錄取'});
+  save();ghostOnly=false;render();
+  toast([a.length&&`${a.length} 筆改成無回應`,b.length&&`${b.length} 筆改成未錄取`].filter(Boolean).join('、'),{undo:true});
+};
+$('#suggView').onclick=()=>{ghostOnly=true;filter=null;attnOnly=false;view='table';page=1;render()};
+$('#suggLater').onclick=()=>{localStorage.setItem(KEY+'-ghostSnooze',Date.now()+3*864e5);renderSuggest()};
+
+/* ---------- Offer comparison ---------- */
+function openCompare(){
+  const offers=data.filter(d=>st(d.status).k==='錄取');
+  if(!offers.length)return toast('目前還沒有錄取的紀錄');
+  const rowsDef=[
+    ['職位',d=>esc(d.position)],
+    ['薪資',d=>d.salary?`<span class="money">${esc(d.salary)}</span>`:'<span class="sub">未填</span>'],
+    ['地點',d=>esc(d.location||'—')],
+    ['來源',d=>`${org(d)}${d.channel?'<br><span class="sub">'+esc(d.channel)+'</span>':''}`],
+    ['面試過程',d=>(d.interviews||[]).length?(d.interviews||[]).map(x=>`${esc(x.round)}${x.result?' · '+esc(x.result):''}`).join('<br>'):'—'],
+    ['聯絡人',d=>esc(d.contact||'—')],
+    ['下一步',d=>esc(d.next||'—')+(d.nextDate?`<br><span class="sub">${esc(d.nextDate)}</span>`:'')],
+    ['備註',d=>esc(d.note||'—')],
+    ['連結',d=>d.link?`<a href="${esc(d.link)}" target="_blank" rel="noopener">職缺頁面 ↗</a>`:'—']
+  ];
+  $('#cmpBody').innerHTML=`<table class="cmp"><thead><tr><th></th>${offers.map(d=>`<th><a href="#" data-cmp="${d.id}" style="color:inherit">${esc(d.company)}</a></th>`).join('')}</tr></thead>
+    <tbody>${rowsDef.map(([l,f])=>`<tr><th>${l}</th>${offers.map(d=>`<td>${f(d)}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
+  $('#cmpBody').querySelectorAll('[data-cmp]').forEach(a=>a.onclick=e=>{e.preventDefault();$('#cdlg').close();openDlg(a.dataset.cmp)});
+  $('#cdlg').showModal();
+}
+document.querySelectorAll('th[data-sort]').forEach(th=>th.onclick=()=>{
+  const k=th.dataset.sort;
+  if(sortKey===k)sortDir=-sortDir;else{sortKey=k;sortDir=k==='date'?-1:1}
+  page=1;render();
+});
+document.querySelectorAll('#views button').forEach(b=>b.onclick=()=>{view=b.dataset.v;localStorage.setItem(KEY+'-view',view);selected.clear();render()});
+view=localStorage.getItem(KEY+'-view')||'table';
+
+/* ---------- Import / export / backup ---------- */
+$('#exportBtn').onclick=()=>{if(exportRows(data)){toast('已備份到 Excel，記得把檔案存在安全的地方');renderBackup()}};
+$('#backupNow').onclick=()=>{if(exportRows(data)){renderBackup();toast('備份完成')}};
+$('#backupLater').onclick=()=>{localStorage.setItem(KEY+'-snooze',Date.now()+864e5);renderBackup()};
+$('#fileIn').onchange=async e=>{
+  const file=e.target.files[0];e.target.value='';if(!file)return;
+  try{
+    const rows=file.name.toLowerCase().endsWith('.csv')?parseCSV(await file.text()):await parseXLSX(await file.arrayBuffer());
+    importRecords(rowsToRecords(rows));
+  }catch(err){console.error(err);alert('還原失敗：'+err.message+'\n請選擇用「備份到 Excel」存下來的 .xlsx 檔。')}
+};
+
+// bring saved records in line with the status/interview rules
+data.forEach(normalizeRecord);save();
+render();
+</script>
+</body>
+</html>
