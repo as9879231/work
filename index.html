@@ -288,26 +288,27 @@ body.v-stats .toolbar{margin-top:22px;margin-bottom:16px}
   .views button{flex:1;justify-content:center;padding:10px 6px}
   .search{min-width:0;font-size:16px}
 
-  /* table rows become cards */
-  .table-wrap{background:none;border:none;border-radius:0;overflow:visible}
-  table{min-width:0;display:block}
-  colgroup,thead{display:none}
-  tbody{display:flex;flex-direction:column;gap:10px}
-  tbody tr{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 14px;position:relative;
+  /* the records table becomes cards (scoped so the analytics and comparison tables stay real tables) */
+  #vTable .table-wrap{background:none;border:none;border-radius:0;overflow:visible}
+  #vTable table{min-width:0;display:block}
+  #vTable colgroup,#vTable thead{display:none}
+  #vTable tbody{display:flex;flex-direction:column;gap:10px}
+  #vTable tbody tr{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 14px;position:relative;
     background:var(--card);border:1.5px solid var(--line);border-radius:14px;padding:12px 14px 14px 44px}
-  tbody tr.sel{border-color:var(--green);background:var(--green-soft)}
-  tbody tr:has(td[colspan]){display:block;padding:0}
-  td{display:block;padding:0;border:none;min-width:0}
-  td[data-label]::before{content:attr(data-label);display:block;font-family:var(--mono);font-size:10.5px;letter-spacing:.06em;color:var(--muted);margin-bottom:3px}
-  td[data-label]:has(> .nil:only-child){display:none}
-  td.ck{position:absolute;left:14px;top:16px;width:auto}
-  td.c-co{grid-column:1/-1;padding-right:64px}
-  td.row-act{position:absolute;right:12px;top:11px}
-  td.row-act button{padding:7px 12px}
-  td.next,td.note{grid-column:1/-1}
+  #vTable tbody tr.sel{border-color:var(--green);background:var(--green-soft)}
+  #vTable tbody tr:has(td[colspan]){display:block;padding:0}
+  #vTable td{display:block;padding:0;border:none;min-width:0}
+  #vTable td[data-label]::before{content:attr(data-label);display:block;font-family:var(--mono);font-size:10.5px;letter-spacing:.06em;color:var(--muted);margin-bottom:3px}
+  #vTable td[data-label]:has(> .nil:only-child){display:none}
+  #vTable td.ck{position:absolute;left:14px;top:16px;width:auto}
+  #vTable td.c-co{grid-column:1/-1;padding-right:64px}
+  #vTable td.row-act{position:absolute;right:12px;top:11px}
+  #vTable td.row-act button{padding:7px 12px}
+  #vTable td.next,#vTable td.note{grid-column:1/-1}
   .note{max-width:none}
   .iv-cell{white-space:normal}
   input.cb{width:20px;height:20px}
+  .an-table td,.an-table th{padding:7px 6px;font-size:12px}
 
   /* board: tabs pick one status at a time; each card has its own "move to" menu since touch can't drag */
   .kb-d{display:none}.kb-m{display:inline}
