@@ -400,7 +400,7 @@ td.c-co{min-width:170px;max-width:260px}
   /* upcoming interviews: a small agenda list instead of a sideways chip row */
   .upcoming{display:block;overflow:visible;margin:0 0 14px;padding:0}
   .upcoming:not(:has(.up-alerts .chip,.up-iv)){display:none}
-  .up-alerts{display:flex;gap:6px;overflow-x:auto;margin:0 -14px 10px;padding:0 14px;scrollbar-width:none}
+  .up-alerts{display:flex;gap:6px;overflow-x:auto;overflow-y:hidden;overscroll-behavior-x:contain;margin:0 -14px 10px;padding:0 14px;scrollbar-width:none}
   .up-alerts:empty{display:none}
   .up-alerts .chip{flex:none;border-radius:999px;padding:6px 12px}
   .up-iv{display:block;background:var(--card);border:1.5px solid var(--plum);border-radius:14px;overflow:hidden}
@@ -518,10 +518,11 @@ td.c-co{min-width:170px;max-width:260px}
   .wrap{padding-bottom:calc(150px + env(safe-area-inset-bottom))}
   /* the bulk panel is taller than the tab bar, so leave room for it too */
   body.has-bulk .wrap{padding-bottom:calc(230px + env(safe-area-inset-bottom))}
-  /* status row becomes tabs with an underline on the picked one */
-  .stats{margin:10px -14px 12px;padding:0 14px;gap:0;border-bottom:1.5px solid var(--line);scroll-snap-type:none}
+  /* status row becomes tabs with an underline on the picked one; it only scrolls sideways
+     (the grey base line is an inset shadow, so the underline doesn't poke out and make the row scroll up and down) */
+  .stats{margin:10px -14px 12px;padding:0 14px;gap:0;box-shadow:inset 0 -1.5px 0 var(--line);scroll-snap-type:none;overflow-y:hidden;overscroll-behavior-x:contain}
   .stat{flex:0 0 auto;display:flex;flex-direction:row-reverse;align-items:baseline;gap:5px;padding:10px 12px 9px;border:none;border-radius:0;background:transparent;
-    margin-bottom:-1.5px;border-bottom:2.5px solid transparent}
+    border-bottom:2.5px solid transparent}
   .stat .l{margin:0;font-size:13.5px;color:var(--muted);white-space:nowrap}
   .stat .l .dot{display:none}
   .stat .n{font-family:var(--mono);font-size:12px;font-weight:600;color:var(--muted)!important}
