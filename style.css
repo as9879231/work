@@ -21,7 +21,8 @@ button:hover,.btn:hover{transform:translate(-1px,-1px);box-shadow:3px 3px 0 var(
 .primary{background:var(--green);color:#fff;border-color:var(--green)}
 .plum{background:var(--plum);color:#fff;border-color:var(--plum)}
 .ghost{border-color:var(--line)}
-input[type=file]{display:none}
+/* kept in the page but invisible: some phone browsers won't open a file picker that is display:none */
+input[type=file]{position:fixed;left:-9999px;top:0;width:1px;height:1px;opacity:0}
 
 /* backup reminder */
 .backup{display:none;align-items:center;gap:12px;flex-wrap:wrap;margin-top:18px;padding:12px 16px;border:1.5px dashed var(--mustard);background:#fdf5e2;border-radius:14px;font-size:13px}
@@ -50,6 +51,11 @@ input[type=file]{display:none}
 .chip.attn:hover{box-shadow:3px 3px 0 var(--tomato)}
 .chip.ics{border-color:var(--line);color:var(--ink)}
 .chip.ics:hover{box-shadow:3px 3px 0 var(--ink)}
+/* the wrappers only matter on phones; on wider screens the chips flow in one row as before */
+.up-alerts,.up-iv{display:contents}
+.up-more,.up-iv .lab i{display:none}
+.chip .d{font-family:var(--mono);color:var(--plum);margin-right:6px}
+.chip .d span{font-weight:700}
 
 .toolbar{display:flex;gap:10px;align-items:center;margin-bottom:10px;flex-wrap:wrap}
 .views{display:flex;border:1.5px solid var(--ink);border-radius:999px;overflow:hidden;background:var(--card)}
@@ -261,6 +267,27 @@ textarea{resize:vertical;min-height:70px}
 .iv-empty{font-size:12.5px;color:var(--muted);padding:4px 2px}
 .bd-body{padding:18px 22px;display:flex;flex-direction:column;gap:12px}
 
+/* details view */
+.vd-body{padding:16px 22px 18px}
+#vTitle .inb{vertical-align:4px}
+.vd-top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:12px}
+.vd-pos{font-size:15px;font-weight:600;line-height:1.5}
+.vd-top .pill{flex:none}
+.vd-flags{margin:-4px 0 12px}
+.vd-list{margin:0;border-top:1.5px dashed var(--line)}
+.vd-r{display:grid;grid-template-columns:76px minmax(0,1fr);gap:10px;padding:9px 0;border-bottom:1px dashed var(--line)}
+.vd-r dt{font-size:12px;color:var(--muted);padding-top:2px}
+.vd-r dd{margin:0;font-size:14px;line-height:1.55;word-break:break-word}
+.vd-r a{color:var(--sky);text-decoration:none;font-weight:600}
+.vd-note{white-space:pre-line;color:#3b443e}
+.vd-iv{margin-top:16px}
+.vd-h{display:flex;justify-content:space-between;align-items:baseline;font-family:var(--serif);font-weight:900;font-size:16px;margin-bottom:8px}
+.vd-ivr{border:1.5px solid var(--line);border-left:4px solid var(--line);border-radius:10px;padding:9px 12px;margin-bottom:8px;background:#fbf8f1}
+.vd-ivr.up{border-left-color:var(--plum);background:#faf5fa}
+.vd-ivt{display:flex;align-items:center;gap:6px;margin-bottom:2px}
+.vd-ivr .vd-note{font-size:13px;margin-top:4px}
+.res-待面試,.res-等結果{background:#ebe8e0;color:var(--muted)}
+
 /* suggestion banner */
 .backup.sugg{border-color:var(--sky);background:#e9f0f8}
 /* analytics ignores filters, so hide the controls that would look like they apply */
@@ -328,6 +355,7 @@ tbody tr.sel:hover td.ck,tbody tr.sel:hover td.c-co,tbody tr.sel:hover td.c-act{
 tr.grp td.ck{background:#f1eadb}
 td.c-co{min-width:170px;max-width:260px}
 .nar{display:none;font-size:12px;color:var(--muted);margin-top:3px;line-height:1.45}
+.m-meta{display:none}
 .nar-note{color:#454c46;white-space:pre-line;display:none;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 /* narrower screens: fold 備註 and 管道 into the company cell */
 @media (max-width:1240px){
@@ -350,12 +378,14 @@ td.c-co{min-width:170px;max-width:260px}
 @media (max-width:640px){.iv-row{grid-template-columns:1fr 1fr}}
 /* ================= tablets, phones and touch screens ================= */
 @media (min-width:821px) and (max-width:1100px){.kanban{grid-template-columns:repeat(4,minmax(0,1fr))!important}}
-.kb-touch,.f-toggle,.phone-only{display:none}
+.kb-touch,.f-toggle,.phone-only,.tabbar,.fab{display:none}
 /* touch: bigger tap targets; dragging cards isn't available, so the hint says to tap */
 @media (pointer:coarse){
   input.cb{width:20px;height:20px}
   .pill{padding:7px 14px}
   .kb-mouse{display:none}.kb-touch{display:inline}
+  /* cards can't be dragged on touch screens, so an empty column just says it's empty */
+  .col-body.empty::after{content:'沒有紀錄'}
 }
 @media (max-width:640px){
   .wrap{padding:20px 14px 90px}
@@ -367,12 +397,37 @@ td.c-co{min-width:170px;max-width:260px}
   .stats{display:flex;overflow-x:auto;gap:6px;margin:16px -14px 14px;padding:0 14px 4px;scroll-snap-type:x proximity;scrollbar-width:none}
   .stat{flex:0 0 92px;padding:10px 12px;scroll-snap-align:start}
   .stat .n{font-size:24px}
-  .upcoming{flex-wrap:nowrap;overflow-x:auto;margin:0 -14px 12px;padding:0 14px 4px;scrollbar-width:none}
-  .upcoming .chip,.upcoming .lab{flex:none}
-  /* toolbar: the three views share the full width; search + 篩選 sit on the next line */
-  .toolbar{gap:8px}
-  .views{flex:1 1 100%}
-  .views button{flex:1;justify-content:center;padding:9px 6px}
+  /* upcoming interviews: a small agenda list instead of a sideways chip row */
+  .upcoming{display:block;overflow:visible;margin:0 0 14px;padding:0}
+  .upcoming:not(:has(.up-alerts .chip,.up-iv)){display:none}
+  .up-alerts{display:flex;gap:6px;overflow-x:auto;margin:0 -14px 10px;padding:0 14px;scrollbar-width:none}
+  .up-alerts:empty{display:none}
+  .up-alerts .chip{flex:none;border-radius:999px;padding:6px 12px}
+  .up-iv{display:block;background:var(--card);border:1.5px solid var(--plum);border-radius:14px;overflow:hidden}
+  .up-iv .lab{display:block;padding:9px 12px 7px;font-size:11px;border-bottom:1px dashed #dccbe0;background:#f7f0f7}
+  .chip.iv{display:grid;grid-template-columns:64px minmax(0,1fr);align-items:center;gap:12px;border:none;border-radius:0;padding:10px 12px;background:transparent}
+  .chip.iv+.chip.iv{border-top:1px dashed var(--line)}
+  .chip.iv:hover,.chip.iv:active{box-shadow:none;background:#faf5fa}
+  .chip.iv .d{display:flex;flex-direction:column;align-items:flex-start;margin:0;line-height:1.25;padding-right:10px;border-right:2px solid var(--plum)}
+  .chip.iv .md{font-family:var(--serif);font-size:18px;font-weight:900;color:var(--ink)}
+  .chip.iv .wd{display:none}
+  .chip.iv .tm{font-size:12px;color:var(--plum)}
+  .chip.iv .w{display:flex;flex-direction:column;min-width:0}
+  .chip.iv .c{font-weight:700;font-size:14.5px;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .chip.iv .r{font-size:12.5px;color:var(--muted)}
+  /* only the first few interviews show; the rest fold behind 還有 N 場 */
+  .up-iv:not(.open) .chip.iv.more{display:none}
+  .up-iv .lab{display:flex!important;justify-content:space-between;align-items:center}
+  .up-iv .lab i{display:inline;font-style:normal;color:var(--muted);letter-spacing:0}
+  .up-more{display:flex;width:100%;justify-content:center;border:none;border-top:1px dashed #dccbe0;border-radius:0;background:#f7f0f7;color:var(--plum);font-size:12.5px;font-weight:600;padding:9px}
+  .up-more:hover{transform:none;box-shadow:none;background:#f0e5f0}
+  /* the calendar export lives in 更多 on phones */
+  .upcoming .chip.ics{display:none}
+
+  /* status cards become a compact swipeable chip row */
+  /* toolbar: views move to the bottom tab bar, so search + 篩選 share one line */
+  .toolbar{gap:8px;flex-wrap:nowrap}
+  .views{display:none}
   .search-box{flex:1 1 0;min-width:0}
   .f-toggle{display:inline-flex;flex:none;padding:9px 13px;border-color:var(--line)}
   /* 16px stops iPhone from zooming in when a field is tapped */
@@ -394,24 +449,40 @@ td.c-co{min-width:170px;max-width:260px}
   .table-wrap table{display:block;min-width:0!important}
   .table-wrap thead{display:none}
   .table-wrap tbody{display:flex;flex-direction:column;gap:8px}
-  .table-wrap tbody tr{display:grid;grid-template-columns:24px minmax(0,1fr) auto;grid-template-areas:"ck co st" "ck date date" "ck iv iv" "ck next next";
-    gap:6px 10px;align-items:start;background:var(--card);border:1.5px solid var(--line);border-radius:14px;padding:12px;cursor:pointer}
-  .table-wrap tbody tr:active{border-color:var(--ink)}
-  .table-wrap tbody tr.sel{background:var(--green-soft);border-color:var(--green)}
+  /* card: status strip on the left; company + status on top, position, then one quiet meta line */
+  .table-wrap tbody tr{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"co st" "iv iv" "next next";
+    gap:8px 12px;align-items:start;background:var(--card);border:1.5px solid var(--line);border-left:5px solid var(--sc,var(--sky));border-radius:12px;padding:13px 12px 12px 14px;cursor:pointer}
+  /* 選取 mode: a checkbox column appears on the left */
+  body.sel-mode .table-wrap tbody tr{grid-template-columns:26px minmax(0,1fr) auto;grid-template-areas:"ck co st" "ck iv iv" "ck next next"}
+  .table-wrap tbody tr:active{border-color:var(--ink);border-left-color:var(--sc,var(--sky))}
+  .table-wrap tbody tr.sel{background:var(--green-soft);border-color:var(--green);border-left-color:var(--sc,var(--sky))}
   .table-wrap td{display:block;padding:0;border:none;position:static!important;box-shadow:none!important;background:transparent!important;max-width:none!important;min-width:0!important}
-  .table-wrap td.ck{grid-area:ck;padding-top:2px}
+  .table-wrap td.ck{display:none!important;grid-area:ck;align-self:center}
+  body.sel-mode .table-wrap td.ck{display:block!important}
+  body:not(.sel-mode) .sel-only{display:none!important}
+  .sel-btn{padding:6px 13px;font-size:13px;border-color:var(--line);flex:none}
+  body.sel-mode .sel-btn{background:var(--ink);color:#fff;border-color:var(--ink)}
   .table-wrap td.c-co{grid-area:co}
   /* tapping the card edits it, so the edit button can go */
-  .table-wrap td.c-act{display:none!important}
-  .table-wrap td.c-date{grid-area:date;align-self:center}
+  .table-wrap td.c-act,.table-wrap td.c-date,.table-wrap td.c-ch{display:none!important}
   .table-wrap td.c-st{grid-area:st;justify-self:end}
-  .table-wrap .co{font-size:15.5px}
+  .table-wrap .co{font-size:16px;line-height:1.3}
+  /* the job link shrinks to a small ↗ next to the company */
+  .table-wrap .co a{font-size:0;margin-left:4px}
+  .table-wrap .co a::after{content:'↗';font-size:14px}
+  .table-wrap .co .inb{font-size:10px;padding:1px 7px}
+  .table-wrap td.c-co>.sub{font-size:13.5px;color:#3b443e;margin-top:4px;line-height:1.45}
+  .m-meta{display:flex;flex-wrap:wrap;margin-top:8px;font-size:12px;color:var(--muted);line-height:1.5}
+  .m-meta span+span::before{content:'·';margin:0 7px;color:#c4bcac}
+  .nar-ch,.nar-loc{display:none!important}
+  .nar-note{margin-top:6px;-webkit-line-clamp:1}
   /* long street addresses stay on one line */
   .nar-loc{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  /* 全部 only, without the 邀約 count */
+  .stat .inv{display:none}
   .table-wrap td.c-iv{grid-area:iv}
   .table-wrap td.c-next{grid-area:next}
-  .table-wrap td.c-ch,.table-wrap td.c-loc,.table-wrap td.c-note{display:none!important}
-  .nar-ch,.nar-loc{display:block}
+  .table-wrap td.c-loc,.table-wrap td.c-note{display:none!important}
   .nar-note{display:-webkit-box}
   /* hide the interview / next-step block only when it holds nothing but the "—" placeholder */
   .table-wrap td.c-iv:has(> .nil:only-child),.table-wrap td.c-next:has(> .nil:only-child){display:none}
@@ -421,7 +492,7 @@ td.c-co{min-width:170px;max-width:260px}
   .iv-cell{white-space:normal}
   tr.in-grp td:nth-child(2){padding-left:0}
   .table-wrap tbody tr.in-grp{margin-left:10px}
-  .table-wrap tbody tr.grp{display:flex;align-items:center;gap:8px;background:#f1eadb;border-color:#e3d9c4;padding:8px 10px}
+  .table-wrap tbody tr.grp{display:flex;align-items:center;gap:8px;background:#f1eadb;border:1.5px solid #e3d9c4;padding:8px 10px}
   /* the desktop group-row cell padding and divider would otherwise leak into the card */
   .table-wrap tbody tr.grp td{padding:0;border:none}
   .table-wrap tbody tr.grp td:last-child{flex:1;min-width:0}
@@ -439,33 +510,102 @@ td.c-co{min-width:170px;max-width:260px}
   h1{font-size:26px;margin:0}
   .actions .ghost,.actions .btn{padding:7px 8px;font-size:12.5px}
 
-  /* board: one column per screen, swipe sideways */
-  .kanban{display:flex!important;overflow-x:auto;scroll-snap-type:x mandatory;gap:10px;margin:0 -14px;padding:0 14px 6px}
-  .col{flex:0 0 80vw;scroll-snap-align:start}
-  .col-body{max-height:none}
-  .drops{flex:0 0 80vw;flex-direction:column;align-items:stretch;margin:0;padding:0 0 0 10px;border-top:none;border-left:1.5px dashed var(--line);scroll-snap-align:start}
+  /* ---- app-style phone layout ---- */
+  /* the header buttons move to ＋ and 更多, so the top is just the title */
+  .actions{display:none!important}
+  header{border-bottom-width:1.5px;padding-bottom:10px}
+  .hint{display:none}
+  .wrap{padding-bottom:calc(150px + env(safe-area-inset-bottom))}
+  /* the bulk panel is taller than the tab bar, so leave room for it too */
+  body.has-bulk .wrap{padding-bottom:calc(230px + env(safe-area-inset-bottom))}
+  /* status row becomes tabs with an underline on the picked one */
+  .stats{margin:10px -14px 12px;padding:0 14px;gap:0;border-bottom:1.5px solid var(--line);scroll-snap-type:none}
+  .stat{flex:0 0 auto;display:flex;flex-direction:row-reverse;align-items:baseline;gap:5px;padding:10px 12px 9px;border:none;border-radius:0;background:transparent;
+    margin-bottom:-1.5px;border-bottom:2.5px solid transparent}
+  .stat .l{margin:0;font-size:13.5px;color:var(--muted);white-space:nowrap}
+  .stat .l .dot{display:none}
+  .stat .n{font-family:var(--mono);font-size:12px;font-weight:600;color:var(--muted)!important}
+  .stat.on{box-shadow:none;border-bottom-color:var(--green)}
+  .stat.on .l{color:var(--ink);font-weight:700}
+  .stat.on .n{color:var(--green)!important}
+  .bar{display:none}
+  .backup{margin-top:12px;padding:10px 12px;font-size:12.5px}
+  /* status on the card is the main thing to change on the go: make it an easy target */
+  .table-wrap .pill{padding:8px 14px;font-size:13px;min-width:84px}
+  /* bulk bar sits above the tab bar */
+  .bulk{bottom:calc(62px + env(safe-area-inset-bottom));border-bottom:1.5px solid var(--ink)}
+  body.has-bulk .fab{display:none!important}
+
+  .tabbar{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:25;background:var(--card);border-top:1.5px solid var(--ink);
+    padding:4px 6px calc(4px + env(safe-area-inset-bottom))}
+  .tabbar button{flex:1;flex-direction:column;gap:1px;border:none;border-radius:12px;background:transparent;padding:6px 0 5px;font-size:19px;line-height:1;color:var(--muted)}
+  .tabbar button span{font-size:11px;font-weight:600}
+  .tabbar button:hover{transform:none;box-shadow:none}
+  .tabbar button.on{color:var(--green);background:var(--green-soft)}
+  .fab{display:flex;position:fixed;right:16px;bottom:calc(76px + env(safe-area-inset-bottom));z-index:26;width:56px;height:56px;padding:0;justify-content:center;
+    border-radius:50%;background:var(--green);color:#fff;border:2px solid var(--ink);font-size:28px;box-shadow:3px 3px 0 var(--ink)}
+  .fab:active{transform:translate(1px,1px);box-shadow:1px 1px 0 var(--ink)}
+  .more-list{display:flex;flex-direction:column;gap:8px;padding:14px}
+  .more-list button{justify-content:flex-start;padding:13px 16px;border-radius:12px;font-size:15px;border-color:var(--line)}
+
+  /* the board is wide-screen only (dragging cards doesn't work on a phone; the status tabs cover the same ground) */
+  .tabbar [data-v=kanban]{display:none}
 
   /* analytics */
   .panel{padding:14px}
   .hbar{grid-template-columns:72px minmax(0,1fr) 84px}
 
-  /* bulk bar: one line that scrolls sideways instead of three wrapped lines */
-  .bulk{padding:8px 10px}
-  .bulk-in{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}
-  .bulk .push{display:none}
+  /* bulk bar: a small panel — count + 取消 on top, then the actions as a 3 × 2 grid, no sideways scrolling */
+  .bulk{padding:10px 12px 12px;border-radius:16px 16px 0 0;border-left:1.5px solid var(--ink);border-right:1.5px solid var(--ink);left:6px;right:6px}
+  .bulk-in{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;overflow:visible}
+  .bulk .sep,.bulk .push{display:none}
+  .bulk .cnt{order:-2;grid-column:1/3;padding:0 2px}
+  .bulk .x{order:-1;justify-self:end;padding:6px 8px;font-size:13px;border:none}
+  .bulk select,.bulk button:not(.x){justify-content:center;text-align:center;text-align-last:center;padding:10px 4px;font-size:13px;
+    border:1.5px solid var(--line);border-radius:10px;background:#fbf8f1}
+  .bulk .danger{border-color:#f0c4b8;background:#fdf1ed}
 
-  /* dialogs become bottom sheets with one column of fields */
-  dialog{width:100vw;max-width:100vw;margin-bottom:0;border-radius:18px 18px 0 0;box-shadow:none;border-bottom:none}
-  dialog.small{width:100vw}
+  /* dialogs: centred cards with a little margin around them */
+  dialog,dialog.small{width:calc(100vw - 24px);max-width:calc(100vw - 24px);max-height:86dvh;border-radius:18px;box-shadow:5px 5px 0 var(--ink)}
+  dialog form{max-height:calc(86dvh - 4px)}
   form .grid{grid-template-columns:minmax(0,1fr);padding:14px}
   .iv-sec{margin:0 14px 14px}
   .dlg-h{padding:14px;font-size:19px}
   .dlg-f{padding:12px 14px}
+  .vd-body{padding:14px}
+  #vdlg .dlg-f button{flex:1;justify-content:center;padding:11px}
   label input,label select,label textarea,.iv-row input,.iv-row select{font-size:16px}
+
+  /* interview section: title + add button on one line, the hint underneath */
+  .iv-sec{padding:12px;border-radius:14px}
+  .iv-h{flex-wrap:wrap;gap:4px 10px;white-space:nowrap;margin-bottom:12px}
+  .iv-h .sub{order:3;flex-basis:100%;margin:0!important;white-space:normal;line-height:1.5}
+  .iv-h button{margin-left:auto;padding:7px 14px;font-size:13px}
+  .iv-empty{text-align:center;padding:14px 6px;border:1.5px dashed var(--line);border-radius:12px;line-height:1.6}
+  /* each round becomes its own small card: round + result / date + time / format + buttons / notes */
+  /* four equal columns, so result and time get a full half each (not just the two button-sized columns) */
+  .iv-row{grid-template-columns:repeat(4,minmax(0,1fr));
+    grid-template-areas:"round round result result" "d d t t" "mode mode cal rm" "note note note note";
+    gap:8px;padding:10px;margin-bottom:10px;background:#fff;border:1.5px solid var(--line);border-radius:12px}
+  .iv-row [data-k=round]{grid-area:round;font-weight:700}
+  .iv-row [data-k=result]{grid-area:result}
+  .iv-row [data-k=d]{grid-area:d}
+  .iv-row [data-k=t]{grid-area:t}
+  .iv-row [data-k=mode]{grid-area:mode}
+  .iv-row [data-k=note]{grid-area:note}
+  .iv-row .cal{grid-area:cal}
+  .iv-row .rm{grid-area:rm}
+  .iv-row input,.iv-row select{padding:9px 10px;border-radius:10px;min-height:42px}
+  /* date / time pickers: keep the value readable next to the picker icon */
+  .iv-row input[type=date],.iv-row input[type=time]{padding:9px 6px 9px 10px;-webkit-appearance:none;appearance:none;text-align:left}
+  .iv-row input[type=time]::-webkit-date-and-time-value,.iv-row input[type=date]::-webkit-date-and-time-value{text-align:left}
+  .iv-row .ic{height:42px;border:1.5px solid var(--line);border-radius:10px;background:var(--card);font-size:16px}
+  .iv-row .ic:hover{transform:none}
+  .iv-row .rm{border-color:#f0c4b8;background:#fdf1ed}
 }
 
 @media print{
-  .actions,.toolbar,.filters,.tbl-bar,.row-act,.c-act,.hint,.bar,.bulk,.ck,.pager,.backup,.upcoming,.toast,.grp-h .only,.grp-h .gtog{display:none!important}
+  .actions,.toolbar,.filters,.tbl-bar,.tabbar,.fab,.row-act,.c-act,.hint,.bar,.bulk,.ck,.pager,.backup,.upcoming,.toast,.grp-h .only,.grp-h .gtog{display:none!important}
   .table-wrap th,.table-wrap td{position:static!important;box-shadow:none!important}
   .wrap{padding:0}
   .table-wrap{overflow:visible;border-radius:0}

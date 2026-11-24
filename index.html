@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>求職投遞手帳</title>
 <link rel="stylesheet" href="style.css">
 </head>
@@ -17,7 +17,7 @@
       <button class="primary" id="addBtn">＋ 新增投遞</button>
       <button class="plum" id="addInBtn">＋ 公司邀約</button>
       <button class="ghost" id="exportBtn">⇩ 備份到 Excel</button>
-      <label class="btn ghost" style="flex-direction:row;color:var(--ink);font-size:13px">⇪ 從備份還原<input type="file" id="fileIn" accept=".xlsx,.csv"></label>
+      <label class="btn ghost" for="fileIn" style="flex-direction:row;color:var(--ink);font-size:13px">⇪ 從備份還原<input type="file" id="fileIn" accept=".xlsx,.csv"></label>
     </div>
   </header>
 
@@ -65,8 +65,9 @@
 
   <section id="vTable">
     <div class="tbl-bar">
-      <label class="tgl phone-only"><input type="checkbox" class="cb" id="ckAll2">全選</label>
+      <label class="tgl phone-only sel-only"><input type="checkbox" class="cb" id="ckAll2">全選</label>
       <span class="tb-sum" id="tbSum"></span>
+      <button type="button" class="phone-only sel-btn" id="selMode">選取</button>
       <span class="narrow-only sort-pick"><span class="sp-lab">排序</span><select id="sortSel" title="排序方式">
         <option value="date">日期</option><option value="company">公司</option><option value="channel">管道</option>
         <option value="status">狀態</option><option value="interview">面試進度</option><option value="nextDate">下一步</option>
@@ -88,7 +89,7 @@
   </section>
 
   <section id="vKanban" hidden>
-    <p class="kb-hint"><span class="kb-mouse">拖曳卡片就能改狀態，點卡片可以編輯。</span><span class="kb-touch">點卡片就能編輯、改狀態。左右滑動可以看其他欄。</span><span id="kbHidden"></span></p>
+    <p class="kb-hint"><span class="kb-mouse">拖曳卡片就能改狀態，點卡片看詳細資料。</span><span class="kb-touch">點卡片看詳細資料，也能在裡面改狀態。</span><span id="kbHidden"></span></p>
     <div class="kanban" id="kanban"></div>
   </section>
 
@@ -143,6 +144,17 @@
   </form>
 </dialog>
 
+<dialog id="vdlg">
+  <form method="dialog">
+    <div class="dlg-h" id="vTitle"></div>
+    <div class="dlg-body vd-body" id="vBody"></div>
+    <div class="dlg-f">
+      <button type="button" class="ghost" id="vClose">關閉</button>
+      <button type="button" class="primary" id="vEdit">✎ 編輯</button>
+    </div>
+  </form>
+</dialog>
+
 <dialog id="bdlg" class="small">
   <form method="dialog" id="bform">
     <div class="dlg-h" id="bTitle"></div>
@@ -183,6 +195,25 @@
   <span class="sep"></span>
   <button class="x" id="bulkClear" title="取消選取（Esc）">✕ 取消選取</button>
 </div></div>
+<nav class="tabbar" id="tabbar">
+  <button type="button" data-v="table">☰<span>清單</span></button>
+  <button type="button" data-v="kanban">▦<span>看板</span></button>
+  <button type="button" data-v="stats">◔<span>分析</span></button>
+  <button type="button" id="moreBtn">⋯<span>更多</span></button>
+</nav>
+<button type="button" class="fab" id="fab" title="新增投遞">＋</button>
+<dialog id="mdlg" class="small">
+  <form method="dialog">
+    <div class="dlg-h">更多</div>
+    <div class="more-list">
+      <button type="button" data-act="inbound">☎ 新增公司邀約</button>
+      <button type="button" data-act="export">⇩ 備份到 Excel</button>
+      <button type="button" data-act="restore">⇪ 從備份還原</button>
+      <button type="button" data-act="ics">📅 全部面試加入行事曆</button>
+    </div>
+    <div class="dlg-f"><span></span><button type="submit" class="primary">關閉</button></div>
+  </form>
+</dialog>
 <div class="toast" id="toast"><span id="toastMsg"></span><button id="toastAct" hidden></button></div>
 <div class="errbar" id="errBar" hidden><b>⚠ 網頁出了點問題</b><span id="errMsg"></span><small>請截圖這段訊息傳給我</small><button type="button" onclick="this.parentNode.hidden=true">✕</button></div>
 <script>

@@ -74,12 +74,20 @@ function isFuture(s){
 
 /* ---------- Toast + undo ---------- */
 let undoSnap=null;
+// an open dialog covers everything outside it, so the toast moves into whichever dialog is open
+function placeToast(){
+  const t=$('#toast'), host=[...document.querySelectorAll('dialog[open]')].pop()||document.body;
+  if(t.parentNode!==host)host.appendChild(t);
+}
 function toast(msg,opt={}){
-  const t=$('#toast'), b=$('#toastAct');
+  const t=$('#toast'), b=$('#toastAct');placeToast();
   $('#toastMsg').textContent=msg;
   b.hidden=!opt.undo;t.classList.toggle('has-act',!!opt.undo);
   b.textContent='復原';
-  b.onclick=()=>{if(!undoSnap)return;data=JSON.parse(undoSnap);undoSnap=null;save();render();toast('已復原')};
+  b.onclick=()=>{if(!undoSnap)return;data=JSON.parse(undoSnap);undoSnap=null;save();render();
+    // an open details view would otherwise keep showing the undone change
+    if($('#vdlg').open)data.some(d=>d.id===viewingId)?openView(viewingId):$('#vdlg').close();
+    toast('已復原')};
   t.classList.add('show');clearTimeout(t._t);
   t._t=setTimeout(()=>{t.classList.remove('show');if(opt.undo)undoSnap=null},opt.undo?10000:2200);
 }

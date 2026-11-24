@@ -82,7 +82,7 @@ function renderStats(){
   base.forEach(d=>counts[st(d.status).k]++);
   const open=base.filter(d=>!CLOSED.includes(st(d.status).k)).length, inv=base.filter(d=>org(d)==='公司邀約').length;
   $('#stats').innerHTML=`<div class="stat ${!filter?'on':''}" data-f=""><div class="n">${open}</div><div class="l">進行中</div></div>`+
-    `<div class="stat ${filter==='ALL'?'on':''}" data-f="ALL"><div class="n">${base.length}</div><div class="l">全部${inv?` · 邀約 ${inv}`:''}</div></div>`+
+    `<div class="stat ${filter==='ALL'?'on':''}" data-f="ALL"><div class="n">${base.length}</div><div class="l">全部${inv?`<span class="inv"> · 邀約 ${inv}</span>`:''}</div></div>`+
     STATUSES.map(s=>`<div class="stat ${filter===s.k?'on':''}" data-f="${s.k}"><div class="n" style="color:${s.c}">${counts[s.k]}</div><div class="l"><span class="dot" style="background:${s.c}"></span>${s.k}</div></div>`).join('');
   $('#bar').innerHTML=base.length?STATUSES.filter(s=>counts[s.k]).map(s=>`<div data-tip="${s.k}：${counts[s.k]} 筆" style="width:${counts[s.k]/base.length*100}%;background:${s.c}"></div>`).join(''):'';
   // picking a status card clears the special one-off filters so they can't silently combine
@@ -96,19 +96,26 @@ function upcomingPairs(days){
 function renderUpcoming(){
   const items=upcomingPairs(14), attnN=data.filter(d=>attention(d).length).length, allFuture=upcomingPairs(0).length;
   const offers=data.filter(d=>st(d.status).k==='錄取').length;
-  let html='';
+  let html='<div class="up-alerts">';
   if(ghostOnly)html+=`<span class="chip ghost" id="ghostChip">📭 只顯示很久沒消息的紀錄（點擊取消）</span>`;
   if(attnN)html+=`<span class="chip attn ${attnOnly?'on':''}" id="attnChip">⚠ ${attnN} 筆待處理${attnOnly?'（顯示中，點擊取消）':''}</span>`;
   if(offers)html+=`<span class="chip offer" id="cmpChip">🎉 ${offers} 個錄取${offers>1?' · 並排比較':' · 查看'}</span>`;
-  if(items.length)html+=`<span class="lab">未來兩週面試</span>`+items.map(x=>`<span class="chip" data-open="${x.d.id}"><b>${x.t.getMonth()+1}/${x.t.getDate()}（${WD[x.t.getDay()]}）${hasTime(x.iv.when)?x.iv.when.slice(11,16):'時間未定'}</b>${esc(x.d.company)} ${esc(x.iv.round)}${x.iv.mode?' · '+esc(x.iv.mode):''}</span>`).join('');
+  html+='</div>';
+  // date and time sit in their own spans so phones can stack them as a little calendar block;
+  // phones show the first UP_SHOW and fold the rest behind a toggle
+  if(items.length)html+=`<div class="up-iv ${upOpen?'open':''}"><span class="lab">未來兩週面試<i>${items.length} 場</i></span>`+items.map((x,i)=>`<span class="chip iv ${i>=UP_SHOW?'more':''}" data-open="${x.d.id}"><b class="d"><span class="md">${x.t.getMonth()+1}/${x.t.getDate()}</span><span class="wd">（${WD[x.t.getDay()]}）</span><span class="tm">${hasTime(x.iv.when)?x.iv.when.slice(11,16):'時間未定'}</span></b><span class="w"><span class="c">${esc(x.d.company)}</span> <span class="r">${esc(x.iv.round)}${x.iv.mode?' · '+esc(x.iv.mode):''}</span></span></span>`).join('')+
+    (items.length>UP_SHOW?`<button type="button" class="up-more" id="upMore">${upOpen?'收起 ▴':`還有 ${items.length-UP_SHOW} 場 ▾`}</button>`:'')+'</div>';
   if(allFuture)html+=`<span class="chip ics" id="icsAll">📅 全部面試加入行事曆（${allFuture} 場）</span>`;
   $('#upcoming').innerHTML=html;
-  $('#upcoming').querySelectorAll('[data-open]').forEach(el=>el.onclick=()=>openDlg(el.dataset.open));
+  $('#upcoming').querySelectorAll('[data-open]').forEach(el=>el.onclick=()=>openView(el.dataset.open));
   const a=$('#attnChip');if(a)a.onclick=()=>{attnOnly=!attnOnly;if(attnOnly){filter=null;ghostOnly=false}page=1;render()};
   const g=$('#ghostChip');if(g)g.onclick=()=>{ghostOnly=false;page=1;render()};
   const c=$('#cmpChip');if(c)c.onclick=openCompare;
   const i=$('#icsAll');if(i)i.onclick=()=>downloadICS(upcomingPairs(0),`面試行事曆_${todayStr()}.ics`);
+  const m=$('#upMore');if(m)m.onclick=()=>{upOpen=!upOpen;renderUpcoming()};
 }
+const UP_SHOW=3;
+let upOpen=false;
 function renderSuggest(){
   const a=data.filter(ghost).length, b=data.filter(ivGhost).length, snooze=+localStorage.getItem(KEY+'-ghostSnooze')||0;
   $('#sugg').classList.toggle('show',a+b>0&&Date.now()>snooze&&!ghostOnly);
@@ -149,10 +156,13 @@ function rowHTML(d,inGroup){
   const S=st(d.status), ds=daysSince(d.date), inb=org(d)==='公司邀約', over=d.nextDate&&d.nextDate<todayStr()&&!CLOSED.includes(S.k);
   // on narrow screens the channel, location and note columns fold into the company cell (.nar)
   const loc=[d.location,d.salary].filter(Boolean).map(esc).join(' · ');
-  return `<tr data-row="${d.id}" class="${selected.has(d.id)?'sel':''} ${inGroup?'in-grp':''}">
+  // phone card meta line, plain text: short date, city, channel (full address lives in the edit sheet)
+  const pd=parseDay(d.date), city=cities(d.location).filter(c=>c!=='其他').join('・');
+  const mMeta=[pd&&`<span>${pd.getMonth()+1}/${pd.getDate()}${ds!==null?` ${ds===0?'今天':ds>0?ds+' 天前':-ds+' 天後'}`:''}</span>`,city&&`<span>${esc(city)}</span>`,d.channel&&`<span>${esc(d.channel)}</span>`].filter(Boolean).join('');
+  return `<tr data-row="${d.id}" style="--sc:${S.c}" class="${selected.has(d.id)?'sel':''} ${inGroup?'in-grp':''}">
     <td class="ck"><input type="checkbox" class="cb" data-ck="${d.id}" ${selected.has(d.id)?'checked':''}></td>
-    <td class="c-co"><div class="co"><span class="co-name" data-edit="${d.id}" title="點一下編輯">${esc(d.company)}</span>${inb?'<span class="inb">公司邀約</span>':''}${SHOW_CAT&&d.category&&!inGroup?catTag(d.category):''}${d.link?`<a href="${esc(d.link)}" target="_blank" rel="noopener">職缺↗</a>`:''}</div><div class="sub">${esc(d.position)}</div>
-      ${d.channel?`<div class="nar nar-ch">管道：${esc(d.channel)}</div>`:''}${loc?`<div class="nar nar-loc">📍 ${loc}</div>`:''}${d.note?`<div class="nar nar-note">${esc(d.note)}</div>`:''}</td>
+    <td class="c-co"><div class="co"><span class="co-name" data-view="${d.id}" title="點一下看詳細資料">${esc(d.company)}</span>${inb?'<span class="inb">公司邀約</span>':''}${SHOW_CAT&&d.category&&!inGroup?catTag(d.category):''}${d.link?`<a href="${esc(d.link)}" target="_blank" rel="noopener">職缺↗</a>`:''}</div><div class="sub">${esc(d.position)}</div>
+      ${mMeta?`<div class="m-meta">${mMeta}</div>`:''}${d.channel?`<div class="nar nar-ch">管道：${esc(d.channel)}</div>`:''}${loc?`<div class="nar nar-loc">📍 ${loc}</div>`:''}${d.note?`<div class="nar nar-note">${esc(d.note)}</div>`:''}</td>
     <td class="c-date"><div class="date">${esc(d.date||'—')}</div>${ds!==null?`<div class="days">${inb?'聯繫':'投遞'} · ${ds===0?'今天':ds>0?ds+' 天前':-ds+' 天後'}</div>`:''}</td>
     <td class="c-ch">${d.channel?esc(d.channel):'<span class="nil">—</span>'}</td>
     <td class="c-st"><select class="pill" data-id="${d.id}" style="background:${S.bg};color:${S.c}">${STATUSES.map(x=>`<option ${x.k===S.k?'selected':''}>${x.k}</option>`).join('')}</select></td>
@@ -207,10 +217,14 @@ function renderTable(rows){
   $('#tbody').innerHTML=groups?groups.map(g=>groupHTML(g)+(collapsedCo.has(g.k)?'':g.list.map(d=>rowHTML(d,true)).join(''))).join(''):pageRows.map(d=>rowHTML(d,false)).join('');
   document.querySelectorAll('select.pill').forEach(el=>el.onchange=()=>setStatus(el.dataset.id,el.value));
   document.querySelectorAll('[data-edit]').forEach(el=>el.onclick=()=>openDlg(el.dataset.edit));
-  // phones show rows as cards without an edit button: tapping the card opens it
+  // in 選取 mode a tap anywhere on a phone card (company name included) ticks it instead of opening it
+  const tick=id=>{selected.has(id)?selected.delete(id):selected.add(id);render()};
+  const selecting=()=>PHONE.matches&&document.body.classList.contains('sel-mode');
+  document.querySelectorAll('#tbody [data-view]').forEach(el=>el.onclick=e=>{e.stopPropagation();selecting()?tick(el.dataset.view):openView(el.dataset.view)});
+  // phones show rows as cards: tapping one shows its details
   document.querySelectorAll('tr[data-row]').forEach(tr=>tr.onclick=e=>{
-    if(!PHONE.matches||e.target.closest('input,select,a,button,label,.cat,[data-edit],td.ck,td.c-st'))return;
-    openDlg(tr.dataset.row);
+    if(!PHONE.matches||e.target.closest('input,select,a,button,label,.cat,[data-edit],[data-view],td.c-st'))return;
+    selecting()?tick(tr.dataset.row):openView(tr.dataset.row);
   });
   document.querySelectorAll('[data-ck]').forEach(el=>el.onchange=()=>{
     el.checked?selected.add(el.dataset.ck):selected.delete(el.dataset.ck);

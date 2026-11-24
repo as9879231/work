@@ -9,7 +9,7 @@ function renderKanban(rows){
   $('#kanban').style.gridTemplateColumns=`repeat(${cols.length},minmax(0,1fr))`;
   $('#kbHidden').textContent=panelN()?'目前套用了上方的篩選。':'';
   const drops=hideMode?`<div class="drops"><span class="drops-h">已結束</span>${STATUSES.filter(s=>CLOSED.includes(s.k)).map(s=>
-    `<div class="drop" data-status="${s.k}" title="把卡片拖到這裡就會改成「${s.k}」，點一下可以查看"><span class="dot" style="background:${s.c}"></span>${s.k}<span class="c">${data.filter(d=>passPanel(d)&&st(d.status).k===s.k).length}</span></div>`).join('')}</div>`:'';
+    `<div class="drop" data-status="${s.k}" title="把卡片拖到這裡就會改成「${s.k}」，點一下可以查看"><span class="dot" style="background:${s.c}"></span>${s.k}<span class="c">${data.filter(d=>passPanel(d)&&otherPass(d)&&st(d.status).k===s.k).length}</span></div>`).join('')}</div>`:'';
   $('#kanban').innerHTML=cols.map(s=>{
     const list=rows.filter(d=>st(d.status).k===s.k), closed=CLOSED.includes(s.k);
     // finished columns show a few slim cards; the rest stay folded until asked for
@@ -37,7 +37,7 @@ function renderKanban(rows){
   document.querySelectorAll('.card').forEach(c=>{
     c.ondragstart=e=>{e.dataTransfer.setData('text/plain',c.dataset.id);c.classList.add('dragging')};
     c.ondragend=()=>c.classList.remove('dragging');
-    c.onclick=()=>openDlg(c.dataset.id);
+    c.onclick=()=>openView(c.dataset.id);
   });
   document.querySelectorAll('.col').forEach(col=>{
     col.ondragover=e=>{e.preventDefault();col.classList.add('over')};
@@ -105,6 +105,8 @@ document.addEventListener('mousemove',e=>{
 
 /* ---------- Main render ---------- */
 function render(){
+  // phones have no board: a board left open on a wider screen shows as the list there
+  if(PHONE.matches&&view==='kanban')view='table';
   [...selected].forEach(id=>{if(!data.some(d=>d.id===id))selected.delete(id)});
   // the "long silence" view is a one-off: drop it once nothing matches any more
   if(ghostOnly&&!data.some(d=>ghost(d)||ivGhost(d)))ghostOnly=false;
@@ -122,6 +124,6 @@ function render(){
   $('#anF').checked=anFiltered;
   $('#anNote').textContent=!anFiltered?'目前分析全部紀錄。':panelN()?`目前分析 ${anRows.length} / ${data.length} 筆。`:'還沒選任何篩選條件，所以等於全部紀錄。';
   $('#vTable').hidden=view!=='table';$('#vKanban').hidden=view!=='kanban';$('#vStats').hidden=view!=='stats';
-  document.querySelectorAll('#views button').forEach(b=>b.classList.toggle('on',b.dataset.v===view));
+  document.querySelectorAll('#views button,#tabbar [data-v]').forEach(b=>b.classList.toggle('on',b.dataset.v===view));
   if(view==='table')renderTable(rows);else if(view==='kanban')renderKanban(rows);else renderAnalytics(anRows);
 }

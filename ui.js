@@ -78,9 +78,56 @@ function openDlg(id,origin){
   syncOrigin();
   $('#dlgTitle').textContent=id?(org(d)==='公司邀約'?'編輯公司邀約':'編輯投遞'):(inb?'新增公司邀約':'新增投遞');
   $('#delBtn').style.visibility=id?'visible':'hidden';
-  $('#dlg').showModal();
+  $('#dlg').showModal();placeToast();
 }
 $('#addBtn').onclick=()=>openDlg();
+
+/* ---------- Details view (read-only; 編輯 opens the form) ---------- */
+let viewingId=null, returnView=null;
+function openView(id){
+  const d=data.find(x=>x.id===id);if(!d)return;
+  viewingId=id;
+  const S=st(d.status), ds=daysSince(d.date), inb=org(d)==='公司邀約', ivs=d.interviews||[];
+  const row=(k,v)=>v?`<div class="vd-r"><dt>${k}</dt><dd>${v}</dd></div>`:'';
+  const ago=ds===null?'':` <span class="sub">（${ds===0?'今天':ds>0?ds+' 天前':-ds+' 天後'}）</span>`;
+  $('#vTitle').innerHTML=`${esc(d.company)}${inb?'<span class="inb">公司邀約</span>':''}`;
+  $('#vBody').innerHTML=`
+    <div class="vd-top"><div class="vd-pos">${esc(d.position)}</div>
+      <select class="pill" id="vStatus" title="直接改狀態" style="background:${S.bg};color:${S.c}">${STATUSES.map(x=>`<option ${x.k===S.k?'selected':''}>${x.k}</option>`).join('')}</select></div>
+    ${flagsHTML(d)?`<div class="flags vd-flags">${flagsHTML(d)}</div>`:''}
+    <dl class="vd-list">
+      ${row(inb?'聯繫日期':'投遞日期',d.date?esc(d.date)+ago:'')}
+      ${row(inb?'從哪找到我':'管道',esc(d.channel))}
+      ${row('地點',esc(d.location))}
+      ${row('薪資',esc(d.salary))}
+      ${row('聯絡人',esc(d.contact))}
+      ${row('下一步',d.next||d.nextDate?`${esc(d.next||'—')}${d.nextDate?`<div class="sub">${esc(d.nextDate)}</div>`:''}`:'')}
+      ${row('職缺',d.link?`<a href="${esc(d.link)}" target="_blank" rel="noopener">打開職缺頁面 ↗</a>`:'')}
+      ${row('備註',d.note?`<span class="vd-note">${esc(d.note)}</span>`:'')}
+    </dl>
+    <div class="vd-iv"><div class="vd-h">面試紀錄<span class="sub">${ivs.length?ivs.length+' 輪':''}</span></div>
+      ${ivs.length?ivs.map(iv=>`<div class="vd-ivr ${isFuture(iv.when)?'up':''}">
+        <div class="vd-ivt"><b>${esc(iv.round)}</b>${iv.result?`<span class="res res-${esc(iv.result)}">${esc(iv.result)}</span>`:''}</div>
+        <div class="sub">${iv.when?esc(fmtDT(iv.when)):'時間未定'}${iv.mode?' · '+esc(iv.mode):''}</div>
+        ${iv.note?`<div class="vd-note">${esc(iv.note)}</div>`:''}</div>`).join(''):'<div class="sub">還沒有面試紀錄。要記錄的話按下方「編輯」。</div>'}
+    </div>`;
+  $('#vStatus').onchange=e=>{setStatus(id,e.target.value);openView(id)};
+  if(!$('#vdlg').open)$('#vdlg').showModal();
+  $('#vBody').scrollTop=0;placeToast();
+}
+// when a dialog closes, the toast follows to the next one open (or back to the page)
+document.querySelectorAll('dialog').forEach(dl=>dl.addEventListener('close',()=>setTimeout(placeToast)));
+// tapping the dimmed area around a dialog closes it (not the edit form, so typed changes aren't lost).
+// Both press and release must land outside, so a drag that ends outside doesn't count.
+document.querySelectorAll('#vdlg,#mdlg,#cdlg,#bdlg').forEach(dl=>{
+  let down=null;
+  dl.addEventListener('pointerdown',e=>{down=e.target});
+  dl.addEventListener('click',e=>{if(e.target===dl&&down===dl)dl.close()});
+});
+$('#vClose').onclick=()=>$('#vdlg').close();
+$('#vEdit').onclick=()=>{returnView=viewingId;$('#vdlg').close();openDlg(viewingId)};
+// closing the form (save, cancel or Esc) goes back to the details it came from; a deleted record doesn't
+$('#dlg').addEventListener('close',()=>{if(!returnView)return;const id=returnView;returnView=null;if(data.some(d=>d.id===id))openView(id)});
 $('#addInBtn').onclick=()=>openDlg(null,'公司邀約');
 $('#cancelBtn').onclick=()=>$('#dlg').close();
 $('#delBtn').onclick=()=>{
@@ -128,7 +175,7 @@ function updateBulk(){
 }
 ['#ckAll','#ckAll2'].forEach(s=>$(s).onchange=e=>{visibleIds.forEach(id=>e.target.checked?selected.add(id):selected.delete(id));render()});
 const picked=()=>data.filter(d=>selected.has(d.id));
-function bulkDone(msg,undo=true){selected.clear();save();render();toast(msg,{undo})}
+function bulkDone(msg,undo=true){selected.clear();setSelMode(false);save();render();toast(msg,{undo})}
 let bulkApply=null;
 function openBulk(title,body,apply){
   $('#bTitle').textContent=title;$('#bBody').innerHTML=body;bulkApply=apply;
@@ -153,13 +200,16 @@ $('#bulkNext').onclick=()=>openBulk(`設定 ${selected.size} 筆的下一步`,
   el=>{picked().forEach(d=>{d.next=el.nx.value.trim();d.nextDate=el.nd.value});bulkDone('已設定下一步')});
 $('#bulkNote').onclick=()=>openBulk(`在 ${selected.size} 筆的備註後面加上`,
   `<label>要加的文字<textarea name="nt" placeholder="原本的備註會保留，這段會加在後面"></textarea></label>`,
-  el=>{const v=el.nt.value.trim();if(!v)return;picked().forEach(d=>d.note=d.note?`${d.note}\n${v}`:v);bulkDone('已加上備註')});
+  el=>{const v=el.nt.value.trim();if(!v)return toast('沒有輸入要加的文字，備註沒有變動');picked().forEach(d=>d.note=d.note?`${d.note}\n${v}`:v);bulkDone('已加上備註')});
 $('#bulkExport').onclick=()=>{if(exportRows(picked(),'選取'))bulkDone('已匯出選取的紀錄',false)};
 $('#bulkDel').onclick=()=>{
   const n=selected.size;snapshot();data=data.filter(d=>!selected.has(d.id));bulkDone(`已刪除 ${n} 筆`);
 };
-$('#bulkClear').onclick=()=>{selected.clear();render()};
-document.addEventListener('keydown',e=>{if(e.key==='Escape'&&selected.size&&!$('#dlg').open&&!$('#bdlg').open){selected.clear();render()}});
+$('#bulkClear').onclick=()=>{selected.clear();setSelMode(false);render()};
+// phones: checkboxes only show in 選取 mode, where tapping a card ticks it
+function setSelMode(on){document.body.classList.toggle('sel-mode',on);$('#selMode').textContent=on?'完成':'選取';if(!on)selected.clear()}
+$('#selMode').onclick=()=>{setSelMode(!document.body.classList.contains('sel-mode'));render()};
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&selected.size&&!document.querySelector('dialog[open]')){setSelMode(false);render()}});
 
 /* ---------- Toolbar, filter row, sorting, views ---------- */
 $('#q').oninput=()=>{$('#qClr').hidden=!$('#q').value;page=1;render()};
@@ -172,8 +222,10 @@ function placeForPhone(){
   const f=$('#filters'), tb=$('.toolbar'), bar=$('.tbl-bar');
   if(PHONE.matches){f.insertBefore($('#originF'),$('#fCo'));f.appendChild($('#grpTgl'))}
   else{tb.insertBefore($('#originF'),$('#fToggle'));bar.appendChild($('#grpTgl'))}
+  // rows ticked on a wide screen keep their checkboxes visible after shrinking to phone width
+  if(PHONE.matches&&selected.size&&!document.body.classList.contains('sel-mode')){document.body.classList.add('sel-mode');$('#selMode').textContent='完成'}
 }
-placeForPhone();PHONE.addEventListener('change',placeForPhone);
+placeForPhone();PHONE.addEventListener('change',()=>{placeForPhone();render()});
 function setFilter(k,v){F[k]=v;page=1;render()}
 Object.entries({co:'#fCo',cat:'#fCat',ch:'#fCh',loc:'#fLoc',from:'#fFrom',to:'#fTo'}).forEach(([k,s])=>$(s).onchange=()=>setFilter(k,$(s).value));
 $('#fClear').onclick=()=>{Object.keys(F).forEach(k=>F[k]='');page=1;render()};
@@ -220,13 +272,23 @@ document.querySelectorAll('th[data-sort]').forEach(th=>th.onclick=()=>{
   if(sortKey===k)sortDir=-sortDir;else{sortKey=k;sortDir=k==='date'?-1:1}
   page=1;render();
 });
-document.querySelectorAll('#views button').forEach(b=>b.onclick=()=>{view=b.dataset.v;localStorage.setItem(KEY+'-view',view);selected.clear();render()});
+document.querySelectorAll('#views button,#tabbar [data-v]').forEach(b=>b.onclick=()=>{view=b.dataset.v;localStorage.setItem(KEY+'-view',view);setSelMode(false);render();if(b.closest('#tabbar'))scrollTo({top:0})});
+// phone: ＋ adds a record, 更多 holds the header buttons
+$('#fab').onclick=()=>openDlg();
+$('#moreBtn').onclick=()=>$('#mdlg').showModal();
+$('#mdlg').querySelectorAll('[data-act]').forEach(b=>b.onclick=()=>{
+  $('#mdlg').close();
+  ({inbound:()=>openDlg(null,'公司邀約'),export:()=>$('#exportBtn').click(),restore:()=>$('#fileIn').click(),
+    ics:()=>downloadICS(upcomingPairs(0),`面試行事曆_${todayStr()}.ics`)})[b.dataset.act]();
+});
 view=localStorage.getItem(KEY+'-view')||'table';
 
 /* ---------- Import / export / backup ---------- */
 $('#exportBtn').onclick=()=>{if(exportRows(data)){toast('已備份到 Excel，記得把檔案存在安全的地方');renderBackup()}};
 $('#backupNow').onclick=()=>{if(exportRows(data)){renderBackup();toast('備份完成')}};
 $('#backupLater').onclick=()=>{localStorage.setItem(KEY+'-snooze',Date.now()+864e5);renderBackup()};
+// the file picker lives at the top level, so phones (where the header buttons are hidden) can still open it from 更多
+document.body.appendChild($('#fileIn'));
 $('#fileIn').onchange=async e=>{
   const file=e.target.files[0];e.target.value='';if(!file)return;
   try{
