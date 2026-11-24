@@ -369,13 +369,14 @@ td.c-co{min-width:170px;max-width:260px}
   .stat .n{font-size:24px}
   .upcoming{flex-wrap:nowrap;overflow-x:auto;margin:0 -14px 12px;padding:0 14px 4px;scrollbar-width:none}
   .upcoming .chip,.upcoming .lab{flex:none}
-  /* toolbar: views + source + filter button on one line, search on its own line */
+  /* toolbar: the three views share the full width; search + 篩選 sit on the next line */
   .toolbar{gap:8px}
-  .search-box{order:3;flex-basis:100%}
-  .views button{padding:8px 12px}
+  .views{flex:1 1 100%}
+  .views button{flex:1;justify-content:center;padding:9px 6px}
+  .search-box{flex:1 1 0;min-width:0}
+  .f-toggle{display:inline-flex;flex:none;padding:9px 13px;border-color:var(--line)}
   /* 16px stops iPhone from zooming in when a field is tapped */
   .search,.filters select,.filters input[type=date],.sort-pick select,select.sort{font-size:16px}
-  .f-toggle{display:inline-flex;margin-left:auto;padding:8px 12px;border-color:var(--line)}
   .f-toggle.on{border-color:var(--green);background:var(--green-soft);color:var(--green);font-weight:600}
   /* the filter row folds behind the 篩選 button (analytics still hides it unless it is set to follow the filters) */
   body:not(.f-open) #filters{display:none!important}
@@ -385,21 +386,28 @@ td.c-co{min-width:170px;max-width:260px}
   .filters select{flex:1 1 calc(50% - 8px);max-width:none;min-width:0}
   .filters .drange{flex-basis:100%}
   .filters .drange input{flex:1;min-width:0}
+  .filters #originF{flex:1 1 100%;border-radius:999px;padding:6px 10px}
+  .filters label.tgl{margin-left:0;padding:2px 0}
 
   /* the table turns into a stack of cards */
   .table-wrap{border:none;background:transparent;overflow:visible;border-radius:0}
   .table-wrap table{display:block;min-width:0!important}
   .table-wrap thead{display:none}
   .table-wrap tbody{display:flex;flex-direction:column;gap:8px}
-  .table-wrap tbody tr{display:grid;grid-template-columns:24px minmax(0,1fr) auto;grid-template-areas:"ck co act" "ck date st" "ck iv iv" "ck next next";
-    gap:6px 10px;align-items:start;background:var(--card);border:1.5px solid var(--line);border-radius:14px;padding:12px}
+  .table-wrap tbody tr{display:grid;grid-template-columns:24px minmax(0,1fr) auto;grid-template-areas:"ck co st" "ck date date" "ck iv iv" "ck next next";
+    gap:6px 10px;align-items:start;background:var(--card);border:1.5px solid var(--line);border-radius:14px;padding:12px;cursor:pointer}
+  .table-wrap tbody tr:active{border-color:var(--ink)}
   .table-wrap tbody tr.sel{background:var(--green-soft);border-color:var(--green)}
   .table-wrap td{display:block;padding:0;border:none;position:static!important;box-shadow:none!important;background:transparent!important;max-width:none!important;min-width:0!important}
   .table-wrap td.ck{grid-area:ck;padding-top:2px}
   .table-wrap td.c-co{grid-area:co}
-  .table-wrap td.c-act{grid-area:act}
+  /* tapping the card edits it, so the edit button can go */
+  .table-wrap td.c-act{display:none!important}
   .table-wrap td.c-date{grid-area:date;align-self:center}
   .table-wrap td.c-st{grid-area:st;justify-self:end}
+  .table-wrap .co{font-size:15.5px}
+  /* long street addresses stay on one line */
+  .nar-loc{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .table-wrap td.c-iv{grid-area:iv}
   .table-wrap td.c-next{grid-area:next}
   .table-wrap td.c-ch,.table-wrap td.c-loc,.table-wrap td.c-note{display:none!important}
@@ -418,8 +426,18 @@ td.c-co{min-width:170px;max-width:260px}
   .table-wrap tbody tr.grp td{padding:0;border:none}
   .table-wrap tbody tr.grp td:last-child{flex:1;min-width:0}
   .table-wrap tbody tr:has(.empty){display:block;border:none;background:transparent}
-  .tbl-bar{margin:0 0 8px}
-  .tb-sum .t,.tb-sum .n{font-size:16px}
+  /* the line above the cards: 全選 + count on the left, sort on the right, all on one line */
+  .tbl-bar{margin:0 0 8px;flex-wrap:nowrap;gap:8px}
+  .tbl-bar .tb-sum{flex-wrap:nowrap;overflow:hidden;gap:6px}
+  .tb-sum .sd,.tb-sum .s:not(.sd){display:none}
+  .tb-sum .t,.tb-sum .n{font-size:16px;white-space:nowrap}
+  .sort-pick{flex:none}
+  .sort-pick .sp-lab{display:none}
+  .sort-pick select{padding-left:4px}
+  /* header: smaller title, add buttons on top, backup / restore as a quieter second row */
+  .eyebrow{display:none}
+  h1{font-size:26px;margin:0}
+  .actions .ghost,.actions .btn{padding:7px 8px;font-size:12.5px}
 
   /* board: one column per screen, swipe sideways */
   .kanban{display:flex!important;overflow-x:auto;scroll-snap-type:x mandatory;gap:10px;margin:0 -14px;padding:0 14px 6px}

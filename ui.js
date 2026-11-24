@@ -166,8 +166,14 @@ $('#q').oninput=()=>{$('#qClr').hidden=!$('#q').value;page=1;render()};
 $('#qClr').onclick=()=>{$('#q').value='';$('#qClr').hidden=true;page=1;render();$('#q').focus()};
 $('#q').onkeydown=e=>{if(e.key==='Escape'&&$('#q').value){e.stopPropagation();$('#qClr').click()}};
 $('#originF').onchange=()=>{page=1;render()};
-// phones: the filter row hides behind this button
+// phones hide the filter row behind this button; the source picker and the grouping toggle move into it there
 $('#fToggle').onclick=()=>document.body.classList.toggle('f-open');
+function placeForPhone(){
+  const f=$('#filters'), tb=$('.toolbar'), bar=$('.tbl-bar');
+  if(PHONE.matches){f.insertBefore($('#originF'),$('#fCo'));f.appendChild($('#grpTgl'))}
+  else{tb.insertBefore($('#originF'),$('#fToggle'));bar.appendChild($('#grpTgl'))}
+}
+placeForPhone();PHONE.addEventListener('change',placeForPhone);
 function setFilter(k,v){F[k]=v;page=1;render()}
 Object.entries({co:'#fCo',cat:'#fCat',ch:'#fCh',loc:'#fLoc',from:'#fFrom',to:'#fTo'}).forEach(([k,s])=>$(s).onchange=()=>setFilter(k,$(s).value));
 $('#fClear').onclick=()=>{Object.keys(F).forEach(k=>F[k]='');page=1;render()};

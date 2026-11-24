@@ -149,7 +149,7 @@ function rowHTML(d,inGroup){
   const S=st(d.status), ds=daysSince(d.date), inb=org(d)==='公司邀約', over=d.nextDate&&d.nextDate<todayStr()&&!CLOSED.includes(S.k);
   // on narrow screens the channel, location and note columns fold into the company cell (.nar)
   const loc=[d.location,d.salary].filter(Boolean).map(esc).join(' · ');
-  return `<tr class="${selected.has(d.id)?'sel':''} ${inGroup?'in-grp':''}">
+  return `<tr data-row="${d.id}" class="${selected.has(d.id)?'sel':''} ${inGroup?'in-grp':''}">
     <td class="ck"><input type="checkbox" class="cb" data-ck="${d.id}" ${selected.has(d.id)?'checked':''}></td>
     <td class="c-co"><div class="co"><span class="co-name" data-edit="${d.id}" title="點一下編輯">${esc(d.company)}</span>${inb?'<span class="inb">公司邀約</span>':''}${SHOW_CAT&&d.category&&!inGroup?catTag(d.category):''}${d.link?`<a href="${esc(d.link)}" target="_blank" rel="noopener">職缺↗</a>`:''}</div><div class="sub">${esc(d.position)}</div>
       ${d.channel?`<div class="nar nar-ch">管道：${esc(d.channel)}</div>`:''}${loc?`<div class="nar nar-loc">📍 ${loc}</div>`:''}${d.note?`<div class="nar nar-note">${esc(d.note)}</div>`:''}</td>
@@ -176,7 +176,7 @@ function renderTableSum(total,nCo){
   const dir=['date','interview','nextDate'].includes(sortKey)?(sortDir===-1?'新→舊':'舊→新'):sortKey==='status'?(sortDir===1?'照流程':'反向'):(sortDir===1?'A→Z':'Z→A');
   const extra=[panelN()&&'已套用篩選',$('#q').value.trim()&&`搜尋「${esc($('#q').value.trim())}」`,$('#originF').value&&esc($('#originF').value)].filter(Boolean).join('・');
   $('#tbSum').innerHTML=`<span class="t">${esc(what)}</span><span class="n">${total} 筆</span>${nCo?`<span class="s">${nCo} 間公司</span>`:''}`+
-    `<span class="s">排序：<b>${SORT_NAMES[sortKey]}（${dir}）</b><span class="wide">・點表頭可以換</span></span>${extra?`<span class="s">${extra}</span>`:''}`;
+    `<span class="s sd">排序：<b>${SORT_NAMES[sortKey]}（${dir}）</b><span class="wide">・點表頭可以換</span></span>${extra?`<span class="s">${extra}</span>`:''}`;
 }
 function renderTable(rows){
   document.querySelectorAll('th[data-sort]').forEach(th=>{th.classList.toggle('asc',th.dataset.sort===sortKey&&sortDir===1);th.classList.toggle('desc',th.dataset.sort===sortKey&&sortDir===-1)});
@@ -207,6 +207,11 @@ function renderTable(rows){
   $('#tbody').innerHTML=groups?groups.map(g=>groupHTML(g)+(collapsedCo.has(g.k)?'':g.list.map(d=>rowHTML(d,true)).join(''))).join(''):pageRows.map(d=>rowHTML(d,false)).join('');
   document.querySelectorAll('select.pill').forEach(el=>el.onchange=()=>setStatus(el.dataset.id,el.value));
   document.querySelectorAll('[data-edit]').forEach(el=>el.onclick=()=>openDlg(el.dataset.edit));
+  // phones show rows as cards without an edit button: tapping the card opens it
+  document.querySelectorAll('tr[data-row]').forEach(tr=>tr.onclick=e=>{
+    if(!PHONE.matches||e.target.closest('input,select,a,button,label,.cat,[data-edit],td.ck,td.c-st'))return;
+    openDlg(tr.dataset.row);
+  });
   document.querySelectorAll('[data-ck]').forEach(el=>el.onchange=()=>{
     el.checked?selected.add(el.dataset.ck):selected.delete(el.dataset.ck);
     if(groups)return render();// keeps the company checkbox in step
