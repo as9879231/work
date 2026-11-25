@@ -47,8 +47,32 @@ $('#statusSel').onchange=()=>{
   const tmp={interviews:readIvList()};
   applyStatusToInterviews(tmp,$('#statusSel').value);renderIvList(tmp.interviews);
 };
+// phones and tablets don't pop up the suggestion list for a typed field,
+// so the channels you use most (then the usual ones) sit under it as buttons
+const INB_FIRST=['LinkedIn 私訊','獵頭','104 主動邀約','Email','電話'];
+function channelChoices(inb){
+  const cnt=new Map();
+  data.forEach(d=>{const c=(d.channel||'').trim();if(c&&(inb===undefined||(org(d)==='公司邀約')===inb))cnt.set(c,(cnt.get(c)||0)+1)});
+  const used=[...cnt].sort((a,b)=>b[1]-a[1]).map(x=>x[0]);
+  let preset=[...$('#channels').options].map(o=>o.value);
+  if(inb)preset=[...INB_FIRST,...preset];
+  const out=[];
+  [...used,...preset].forEach(c=>{if(c&&!out.some(x=>normKey(x)===normKey(c)))out.push(c)});
+  return out.slice(0,12);
+}
+function fillChips(box,input,list){
+  box.innerHTML=list.map(c=>`<button type="button" class="chip-ch" data-ch="${esc(c)}">${esc(c)}</button>`).join('');
+  const mark=()=>box.querySelectorAll('[data-ch]').forEach(b=>b.classList.toggle('on',!!input.value.trim()&&normKey(b.dataset.ch)===normKey(input.value)));
+  box.querySelectorAll('[data-ch]').forEach(b=>{
+    // keep the keyboard from opening: a tap picks the channel without focusing the field
+    b.onpointerdown=e=>e.preventDefault();
+    b.onclick=e=>{e.preventDefault();input.value=b.dataset.ch;mark()};
+  });
+  input.oninput=mark;mark();
+}
 function syncOrigin(swapStatus){
   const f=$('#form'), inb=f.elements.origin.value==='公司邀約';
+  fillChips($('#chChips'),f.elements.channel,channelChoices(inb));
   $('#dateLab').textContent=inb?'對方聯繫日期':'投遞日期';
   $('#chLab').textContent=inb?'從哪裡找到我':'投遞管道';
   f.elements.channel.placeholder=inb?'LinkedIn 私訊、獵頭、104 邀約…':'104、LinkedIn、內推…';
@@ -192,9 +216,11 @@ $('#bulkCat').onclick=()=>openBulk(`設定 ${selected.size} 筆的公司類別`,
   el=>{const v=el.ct.value.trim(), ks=new Set(picked().map(d=>normKey(d.company)));
     data.forEach(d=>{if(ks.has(normKey(d.company)))d.category=v});
     bulkDone(v?`${ks.size} 間公司 → ${v}`:`已清除 ${ks.size} 間公司的類別`)});
-$('#bulkChannel').onclick=()=>openBulk(`改 ${selected.size} 筆的管道`,
-  `<label>管道<input name="ch" list="channels" placeholder="104、LinkedIn、內推…"></label>`,
+$('#bulkChannel').onclick=()=>{openBulk(`改 ${selected.size} 筆的管道`,
+  `<label>管道<input name="ch" list="channels" placeholder="104、LinkedIn、內推…"><span class="ch-chips" id="bChChips"></span></label>`,
   el=>{picked().forEach(d=>d.channel=el.ch.value.trim());bulkDone('已更新管道')});
+  fillChips($('#bChChips'),$('#bform').elements.ch,channelChoices());
+};
 $('#bulkNext').onclick=()=>openBulk(`設定 ${selected.size} 筆的下一步`,
   `<label>下一步<input name="nx" placeholder="例：寄感謝信、追蹤進度"></label><label>日期（可留空）<input type="date" name="nd" value="${todayStr()}"></label>`,
   el=>{picked().forEach(d=>{d.next=el.nx.value.trim();d.nextDate=el.nd.value});bulkDone('已設定下一步')});
