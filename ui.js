@@ -175,6 +175,8 @@ $('#form').onsubmit=e=>{
       ?`已經有一筆一模一樣的「${dup.company}／${dup.position}」（${dup.date||'無日期'}）。`
       :`你在 ${dup.date||'之前'} 已經記過「${dup.company}／${dup.position}」，目前狀態是「${st(dup.status).k}」。`);
     if(dup&&!confirm(`${msg}\n還是要另外新增一筆嗎？`)){e.preventDefault();return}
+    // the confirm box pauses this tab, so another tab may have saved meanwhile — catch up before writing
+    syncFromStorage();
   }
   snapshot();
   const prev=editingId?((data.find(x=>x.id===editingId)||{}).category||''):'';
@@ -343,10 +345,14 @@ function syncFromStorage(){
   data.forEach(normalizeRecord);unifyCats();
   // an undo from before the reload would bring back the other tab's overwritten state
   undoSnap=null;
+  const had=selected.size;
   [...selected].forEach(id=>{if(!data.some(d=>d.id===id))selected.delete(id)});
-  if(!selected.size)setSelMode(false);
+  // leave 選取 mode only when the other tab deleted everything that was ticked
+  if(had&&!selected.size)setSelMode(false);
   render();
   if($('#vdlg').open)data.some(d=>d.id===viewingId)?openView(viewingId):$('#vdlg').close();
+  // a restore preview compares against the records on screen, so redo it with the new ones
+  if($('#rdlg').open&&pendingRestore)openRestorePreview(pendingRestore);
   toast('另一個分頁更新了資料，這裡已經同步');
 }
 window.addEventListener('storage',e=>{if(e.key===KEY)syncFromStorage()});

@@ -233,7 +233,7 @@ function openRestorePreview(inc){
   ok.textContent=r.removed.length?`確認還原（會移除 ${r.removed.length} 筆）`:'確認還原';
   ok.classList.toggle('danger-btn',r.removed.length>0);
   pendingRestore=inc;
-  $('#rdlg').showModal();$('#rBody').scrollTop=0;
+  if(!$('#rdlg').open)$('#rdlg').showModal();$('#rBody').scrollTop=0;
 }
 $('#rCancel').onclick=()=>$('#rdlg').close();
 $('#rOk').onclick=()=>{const inc=pendingRestore;pendingRestore=null;$('#rdlg').close();if(inc)applyRestore(inc)};
