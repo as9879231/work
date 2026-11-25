@@ -189,4 +189,4 @@ function importRecords(incoming){
   unifyCats();
   finishImport(`已從備份還原 ${data.length} 筆`);
 }
-function finishImport(msg){save();filter=null;attnOnly=false;Object.keys(F).forEach(k=>F[k]='');page=1;selected.clear();render();toast(msg,{undo:true})}
+function finishImport(msg){save();filter=null;attnOnly=false;Object.keys(F).forEach(k=>F[k]='');page=1;selected.clear();setSelMode(false);render();toast(msg,{undo:true})}

@@ -243,7 +243,7 @@ $('#suggApply').onclick=()=>{
   save();ghostOnly=false;render();
   toast([a.length&&`${a.length} 筆改成無回應`,b.length&&`${b.length} 筆改成未錄取`].filter(Boolean).join('、'),{undo:true});
 };
-$('#suggView').onclick=()=>{ghostOnly=true;filter=null;attnOnly=false;view='table';localStorage.setItem(KEY+'-view',view);selected.clear();page=1;render()};
+$('#suggView').onclick=()=>{ghostOnly=true;filter=null;attnOnly=false;view='table';localStorage.setItem(KEY+'-view',view);setSelMode(false);page=1;render()};
 $('#suggLater').onclick=()=>{localStorage.setItem(KEY+'-ghostSnooze',Date.now()+3*864e5);renderSuggest()};
 
 /* ---------- Offer comparison ---------- */

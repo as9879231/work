@@ -95,9 +95,21 @@ function snapshot(){undoSnap=JSON.stringify(data)}
 
 /* ---------- Interviews ---------- */
 function ivText(iv){return [iv.round,(iv.when||'').replace('T',' '),iv.mode,iv.result].filter(Boolean).join(' ')+(iv.note?`（${iv.note}）`:'')}
+// rounds are separated by ；/;/new line, but only outside the （notes）, so a note that
+// itself contains ；or a line break stays in one piece instead of turning into extra rounds
+function splitIvText(t){
+  const out=[];let cur='',depth=0;
+  for(const ch of String(t||'')){
+    if(ch==='（'||ch==='(')depth++;
+    else if((ch==='）'||ch===')')&&depth)depth--;
+    if(!depth&&/[；;\n]/.test(ch)){out.push(cur);cur=''}else cur+=ch;
+  }
+  out.push(cur);
+  return out.map(s=>s.trim()).filter(Boolean);
+}
 function parseIvText(t){
-  return String(t||'').split(/[；;\n]/).map(s=>s.trim()).filter(Boolean).map(s=>{
-    const m=s.match(/^(\S+)\s*(\d{4}-\d{2}-\d{2})?\s*(\d{1,2}:\d{2})?\s*(線上|現場|電話)?\s*(待面試|等結果|通過|未通過)?\s*(?:[（(](.*)[）)])?$/);
+  return splitIvText(t).map(s=>{
+    const m=s.match(/^(\S+)\s*(\d{4}-\d{2}-\d{2})?\s*(\d{1,2}:\d{2})?\s*(線上|現場|電話)?\s*(待面試|等結果|通過|未通過)?\s*(?:[（(]([\s\S]*)[）)])?$/);
     if(!m)return {round:s,when:'',mode:'',result:'待面試',note:''};
     return {round:m[1],when:m[2]?(m[3]?m[2]+'T'+m[3].padStart(5,'0'):m[2]):'',mode:m[4]||'',result:m[5]||'待面試',note:m[6]||''};
   });
