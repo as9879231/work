@@ -100,7 +100,7 @@
 
   <p class="hint">
     上方的數字卡永遠算全部紀錄；篩選只會套用到表格和看板（分析頁可以另外打開）。篩選和搜尋會記住，下次打開還在。<br>
-    資料只存在這個瀏覽器裡，記得定期按「備份到 Excel」。需要時可以用「從備份還原」，把網頁上的紀錄整份換回備份檔的內容。
+    資料只存在這個瀏覽器裡，記得定期按「備份到 Excel」。需要時可以用「從備份還原」，還原前會先列出備份檔和網頁上的資料有哪些不同，確認後才會把紀錄整份換回備份檔的內容。
   </p>
 </div>
 
@@ -174,6 +174,17 @@
     <div class="dlg-h">錄取比較</div>
     <div class="dlg-body cmp-wrap" id="cmpBody"></div>
     <div class="dlg-f"><span class="sub">點公司名稱可以編輯那筆紀錄。</span><button type="submit" class="primary">關閉</button></div>
+  </form>
+</dialog>
+
+<dialog id="rdlg">
+  <form method="dialog">
+    <div class="dlg-h">從備份還原</div>
+    <div class="dlg-body rd-body" id="rBody"></div>
+    <div class="dlg-f">
+      <button type="button" class="ghost" id="rCancel">取消</button>
+      <button type="button" class="primary" id="rOk">確認還原</button>
+    </div>
   </form>
 </dialog>
 

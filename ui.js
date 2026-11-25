@@ -119,7 +119,7 @@ function openView(id){
 document.querySelectorAll('dialog').forEach(dl=>dl.addEventListener('close',()=>setTimeout(placeToast)));
 // tapping the dimmed area around a dialog closes it (not the edit form, so typed changes aren't lost).
 // Both press and release must land outside, so a drag that ends outside doesn't count.
-document.querySelectorAll('#vdlg,#mdlg,#cdlg,#bdlg').forEach(dl=>{
+document.querySelectorAll('#vdlg,#mdlg,#cdlg,#bdlg,#rdlg').forEach(dl=>{
   let down=null;
   dl.addEventListener('pointerdown',e=>{down=e.target});
   dl.addEventListener('click',e=>{if(e.target===dl&&down===dl)dl.close()});

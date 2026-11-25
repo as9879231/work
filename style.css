@@ -288,6 +288,30 @@ textarea{resize:vertical;min-height:70px}
 .vd-ivr .vd-note{font-size:13px;margin-top:4px}
 .res-待面試,.res-等結果{background:#ebe8e0;color:var(--muted)}
 
+/* restore preview */
+.rd-body{padding:16px 22px 18px}
+.rd-lead{margin:0 0 12px;font-size:14px;line-height:1.6}
+.rd-sum{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}
+.rd-sum span{font-size:12.5px;font-weight:600;padding:5px 11px;border-radius:999px;background:#ebe8e0;color:var(--muted)}
+.rd-sum .add{background:var(--green-soft);color:var(--green)}
+.rd-sum .chg{background:#f8ecd2;color:#a8721a}
+.rd-sum .del{background:#f6e0da;color:#c04a31}
+.rd-none{margin:0 0 12px;padding:12px 14px;border:1.5px dashed var(--line);border-radius:12px;color:var(--muted);font-size:13.5px}
+.rd-sec{border:1.5px solid var(--line);border-radius:12px;margin-bottom:10px;background:#fbf8f1}
+.rd-sec summary{cursor:pointer;padding:10px 14px;font-weight:700;font-size:13.5px}
+.rd-sec summary b{float:right;font-family:var(--mono);font-size:12.5px}
+.rd-sec.del{border-color:#f0c4b8;background:#fdf1ed}
+.rd-sec.del summary{color:#c04a31}
+.rd-sec.chg summary{color:#a8721a}
+.rd-sec.add summary{color:var(--green)}
+.rd-sec ul{list-style:none;margin:0;padding:0 14px 8px;max-height:280px;overflow:auto}
+.rd-sec li{padding:8px 0;border-top:1px dashed var(--line);font-size:13.5px;line-height:1.5;word-break:break-word}
+.rd-ch{margin-top:4px;font-size:12.5px;color:#3b443e}
+.rd-ch .l{display:inline-block;min-width:66px;color:var(--muted)}
+.rd-ch s{color:var(--muted)}
+.rd-foot{margin:4px 0 0;font-size:12px;color:var(--muted)}
+#rOk.danger-btn{background:var(--tomato);border-color:var(--tomato)}
+
 /* suggestion banner */
 .backup.sugg{border-color:var(--sky);background:#e9f0f8}
 /* analytics ignores filters, so hide the controls that would look like they apply */
@@ -574,7 +598,8 @@ td.c-co{min-width:170px;max-width:260px}
   .dlg-h{padding:14px;font-size:19px}
   .dlg-f{padding:12px 14px}
   .vd-body{padding:14px}
-  #vdlg .dlg-f button{flex:1;justify-content:center;padding:11px}
+  #vdlg .dlg-f button,#rdlg .dlg-f button{flex:1;justify-content:center;padding:11px}
+  .rd-body{padding:14px}
   label input,label select,label textarea,.iv-row input,.iv-row select{font-size:16px}
 
   /* interview section: title + add button on one line, the hint underneath */

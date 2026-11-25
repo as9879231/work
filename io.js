@@ -183,10 +183,59 @@ function rowsToRecords(rows){
 // rows are never merged — two records with the same company, position and date are both real
 // (e.g. the same job applied to through two channels), and merging them lost one on restore
 function importRecords(incoming){
-  if(data.length&&!confirm(`要從這個備份還原嗎？\n\n網頁上現有的 ${data.length} 筆紀錄，會換成備份檔裡的 ${incoming.length} 筆。\n（還原後 10 秒內可以按「復原」）`))return;
+  incoming=incoming.map(o=>normalizeRecord(fillDefaults(o)));
+  // nothing on the page yet, so there is nothing to compare against
+  if(!data.length)return applyRestore(incoming);
+  openRestorePreview(incoming);
+}
+function applyRestore(incoming){
   snapshot();
-  data=incoming.map(o=>normalizeRecord(fillDefaults(o)));
+  data=incoming;
   unifyCats();
   finishImport(`已從備份還原 ${data.length} 筆`);
 }
+
+/* ---------- Restore preview: what the backup would change ---------- */
+const DIFF_FIELDS=FIELDS.filter(f=>SHOW_CAT||f!=='category');
+const fieldVal=(d,f)=>f==='origin'?org(d):f==='status'?st(d.status).k:String(d[f]??'').trim();
+const ivSummary=d=>(d.interviews||[]).map(ivText).join('；');
+// backups carry no ids, so records are paired by company + position + date first,
+// then by company + position (the date may have been edited); whatever is left over is added or removed
+function diffRestore(cur,inc){
+  const left=[...cur], pairs=[], rest=[], added=[];
+  const take=(o,key)=>{const k=key(o), i=left.findIndex(d=>key(d)===k);return i<0?null:left.splice(i,1)[0]};
+  const byJob=d=>`${normKey(d.company)}|${normKey(d.position)}`;
+  inc.forEach(o=>{const m=take(o,dupKey);m?pairs.push([m,o]):rest.push(o)});
+  rest.forEach(o=>{const m=take(o,byJob);m?pairs.push([m,o]):added.push(o)});
+  const changed=[];let same=0;
+  pairs.forEach(([a,b])=>{
+    const ch=DIFF_FIELDS.filter(f=>fieldVal(a,f)!==fieldVal(b,f)).map(f=>[LABELS[f],fieldVal(a,f),fieldVal(b,f)]);
+    if(ivSummary(a)!==ivSummary(b))ch.push(['面試紀錄',ivSummary(a),ivSummary(b)]);
+    ch.length?changed.push({d:b,ch}):same++;
+  });
+  return {added,removed:left,changed,same};
+}
+let pendingRestore=null;
+function openRestorePreview(inc){
+  const r=diffRestore(data,inc), none=!r.added.length&&!r.changed.length&&!r.removed.length;
+  const short=s=>{s=String(s||'').replace(/\s+/g,' ').trim();return s?(s.length>40?s.slice(0,40)+'…':s):'（空白）'};
+  const who=d=>`<b>${esc(d.company||'（未填公司）')}</b> <span class="sub">${esc(d.position||'')}${d.date?' · '+esc(d.date):''}</span>`;
+  const sec=(cls,title,list,item,open)=>list.length?`<details class="rd-sec ${cls}" ${open?'open':''}><summary>${title}<b>${list.length} 筆</b></summary><ul>${list.map(item).join('')}</ul></details>`:'';
+  $('#rBody').innerHTML=`
+    <p class="rd-lead">網頁上現在有 <b>${data.length}</b> 筆，備份檔裡有 <b>${inc.length}</b> 筆。還原後，網頁上的資料會變得跟備份檔一模一樣。</p>
+    <div class="rd-sum"><span class="del">－ 會被移除 ${r.removed.length}</span><span class="chg">✎ 內容會改 ${r.changed.length}</span><span class="add">＋ 會加回來 ${r.added.length}</span><span>＝ 相同 ${r.same}</span></div>
+    ${none?'<p class="rd-none">備份檔和網頁上的資料完全一樣，還原不會改變任何東西。</p>':''}
+    ${sec('del','網頁上有、備份裡沒有（還原後會不見）',r.removed,d=>`<li>${who(d)}</li>`,true)}
+    ${sec('chg','內容不同（會改成備份裡的樣子）',r.changed,c=>`<li>${who(c.d)}<div class="rd-ch">${c.ch.map(([l,a,b])=>`<div><span class="l">${esc(l)}</span><s>${esc(short(a))}</s> → ${esc(short(b))}</div>`).join('')}</div></li>`,r.changed.length<=8)}
+    ${sec('add','備份裡有、網頁上沒有（會加回來）',r.added,d=>`<li>${who(d)}</li>`,r.added.length<=8)}
+    <p class="rd-foot">還原後 10 秒內可以按「復原」改回來。</p>`;
+  const ok=$('#rOk');
+  ok.textContent=r.removed.length?`確認還原（會移除 ${r.removed.length} 筆）`:'確認還原';
+  ok.classList.toggle('danger-btn',r.removed.length>0);
+  pendingRestore=inc;
+  $('#rdlg').showModal();$('#rBody').scrollTop=0;
+}
+$('#rCancel').onclick=()=>$('#rdlg').close();
+$('#rOk').onclick=()=>{const inc=pendingRestore;pendingRestore=null;$('#rdlg').close();if(inc)applyRestore(inc)};
+$('#rdlg').addEventListener('close',()=>{pendingRestore=null});
 function finishImport(msg){save();filter=null;attnOnly=false;Object.keys(F).forEach(k=>F[k]='');page=1;selected.clear();setSelMode(false);render();toast(msg,{undo:true})}
