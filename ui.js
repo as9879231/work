@@ -58,10 +58,14 @@ function channelChoices(inb){
   if(inb)preset=[...INB_FIRST,...preset];
   const out=[];
   [...used,...preset].forEach(c=>{if(c&&!out.some(x=>normKey(x)===normKey(c)))out.push(c)});
-  return out.slice(0,12);
+  return out.slice(0,10);
 }
 function fillChips(box,input,list){
+  // the channel already filled in goes first, so it shows without scrolling the row
+  const cur=input.value.trim(), i=cur?list.findIndex(c=>normKey(c)===normKey(cur)):-1;
+  if(i>0)list=[list[i],...list.slice(0,i),...list.slice(i+1)];
   box.innerHTML=list.map(c=>`<button type="button" class="chip-ch" data-ch="${esc(c)}">${esc(c)}</button>`).join('');
+  box.scrollLeft=0;
   const mark=()=>box.querySelectorAll('[data-ch]').forEach(b=>b.classList.toggle('on',!!input.value.trim()&&normKey(b.dataset.ch)===normKey(input.value)));
   box.querySelectorAll('[data-ch]').forEach(b=>{
     // keep the keyboard from opening: a tap picks the channel without focusing the field
