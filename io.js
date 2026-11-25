@@ -179,12 +179,10 @@ function rowsToRecords(rows){
     o.origin=(map.origin!==undefined&&o.origin)||normOrigin(o.channel)==='公司邀約'?normOrigin(o.origin||o.channel):'';
     return o}).filter(o=>o.company||o.position);
 }
-// the Excel file is the source of truth: importing replaces everything
+// the Excel file is the source of truth: importing replaces everything, one record per row.
+// rows are never merged — two records with the same company, position and date are both real
+// (e.g. the same job applied to through two channels), and merging them lost one on restore
 function importRecords(incoming){
-  // collapse duplicate rows inside the file itself
-  const uniq=new Map();
-  incoming.forEach(o=>{const k=dupKey(o);if(uniq.has(k))mergeInto(uniq.get(k),o);else uniq.set(k,o)});
-  incoming=[...uniq.values()];
   if(data.length&&!confirm(`要從這個備份還原嗎？\n\n網頁上現有的 ${data.length} 筆紀錄，會換成備份檔裡的 ${incoming.length} 筆。\n（還原後 10 秒內可以按「復原」）`))return;
   snapshot();
   data=incoming.map(o=>normalizeRecord(fillDefaults(o)));
