@@ -177,9 +177,11 @@ $('#form').onsubmit=e=>{
     if(dup&&!confirm(`${msg}\n還是要另外新增一筆嗎？`)){e.preventDefault();return}
   }
   snapshot();
-  const prev=editingId?(data.find(x=>x.id===editingId).category||''):'';
+  const prev=editingId?((data.find(x=>x.id===editingId)||{}).category||''):'';
   const id=editingId||uid();
-  if(editingId)Object.assign(data.find(x=>x.id===editingId),o);else data.push({id,...o});
+  const cur=editingId&&data.find(x=>x.id===editingId);
+  // the record may have been deleted in another tab while this form was open; keep the edit as a record
+  if(cur)Object.assign(cur,o);else data.push({id,...o});
   // the category belongs to the company, so a change here applies to its other records too
   let others=0;
   if(o.category!==prev){const k=normKey(o.company);data.forEach(d=>{if(normKey(d.company)===k&&d.category!==o.category){d.category=o.category;others++}})}
@@ -329,6 +331,28 @@ $('#fileIn').onchange=async e=>{
 
 // bring saved records in line with the status/interview rules
 data.forEach(normalizeRecord);unifyCats();save();
+
+/* ---------- Keeping several open tabs in step ----------
+   Each tab holds its own copy of the records, so without this a tab left open would save its
+   stale copy over what another tab just added. Whenever another tab saves, this one reloads. */
+function syncFromStorage(){
+  const raw=localStorage.getItem(KEY)||'[]';
+  if(raw===lastRaw)return;
+  let next;try{next=JSON.parse(raw)}catch(e){return}
+  lastRaw=raw;data=next;
+  data.forEach(normalizeRecord);unifyCats();
+  // an undo from before the reload would bring back the other tab's overwritten state
+  undoSnap=null;
+  [...selected].forEach(id=>{if(!data.some(d=>d.id===id))selected.delete(id)});
+  if(!selected.size)setSelMode(false);
+  render();
+  if($('#vdlg').open)data.some(d=>d.id===viewingId)?openView(viewingId):$('#vdlg').close();
+  toast('另一個分頁更新了資料，這裡已經同步');
+}
+window.addEventListener('storage',e=>{if(e.key===KEY)syncFromStorage()});
+// phones and tablets may pause a background tab and miss the message, so check again when it comes back
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)syncFromStorage()});
+window.addEventListener('pageshow',e=>{if(e.persisted)syncFromStorage()});
 if(!SHOW_CAT)['#fCat','#bulkCat'].forEach(s=>$(s).hidden=true),$('#form').elements.category.closest('label').hidden=true;
 // bring back the last filter row, search and source; values that no longer exist are dropped by renderFilters
 try{

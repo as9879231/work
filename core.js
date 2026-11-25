@@ -51,7 +51,9 @@ const collapsedCo=new Set();
 /* ---------- Helpers ---------- */
 const $=s=>document.querySelector(s);
 const PHONE=matchMedia('(max-width:640px)');
-const save=()=>localStorage.setItem(KEY,JSON.stringify(data));
+// lastRaw is what this tab last wrote or loaded, so a change from another tab can be told apart
+let lastRaw=null;
+const save=()=>{lastRaw=JSON.stringify(data);localStorage.setItem(KEY,lastRaw)};
 const uid=()=>Math.random().toString(36).slice(2,10);
 const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const st=k=>STATUSES.find(s=>s.k===k)||STATUSES[1];
